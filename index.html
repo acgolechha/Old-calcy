@@ -13,14 +13,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* =============================================
-           iOS SAFARI SCROLL FIX & OVERSCROLL FIX
+           IOS 9 SAFE STYLES (NO POSITION FIXED ON BODY)
            ============================================= */
         html, body {
-            position: fixed;
             width: 100%;
-            height: 100%;
-            overflow: hidden;
-            overscroll-behavior-y: contain;
+            min-height: 100%;
             font-family: Arial, sans-serif;
             background: #F6F4FB;
             color: #2F2F2F;
@@ -33,7 +30,7 @@
         #appRoot {
             max-width: 600px;
             margin: 0 auto;
-            height: 100%;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             padding: 5px;
@@ -44,8 +41,6 @@
             display: flex;
             gap: 20px;
             flex-wrap: wrap; 
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch; 
             flex: 1;
             padding-bottom: 20px;
         }
@@ -91,7 +86,7 @@
         }
         .side-panel-header h2 { margin: 0; font-size: 18px; }
         #closeSettings { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
-        .side-panel-content { padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+        .side-panel-content { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
 
         .advanced-menu { margin-top: 15px; padding-top: 10px; border-top: 1px solid #E8E5F4; display: none; }
         .advanced-menu.show { display: block; }
@@ -295,4 +290,1866 @@
         }
         .smart-calc-btn:active { transform: scale(0.92); }
         .smart-calc-btn.number { background-color: #ffffff; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .smart-calc-btn.operator { background-color: #7979
+        .smart-calc-btn.operator { background-color: #797979; color: white; font-size: 28px; }
+        .smart-calc-btn.top-op { background-color: #e6e6e6; color: #333; }
+        .smart-calc-btn.equal { background-color: #24a13b; color: white; font-size: 32px; }
+        .smart-calc-btn.number:hover { background-color: #f0f0f0; }
+        .smart-calc-btn.operator:hover { background-color: #666666; }
+        .smart-calc-btn.top-op:hover { background-color: #d4d4d4; }
+        .smart-calc-btn.equal:hover { background-color: #1e8731; }
+    </style>
+</head>
+<body>
+
+<div id="appRoot">
+
+<div id="sidebarOverlay" class="overlay"></div>
+<div id="ptr-indicator">🔄</div>
+
+<div id="customDialogOverlay" class="custom-dialog-overlay">
+    <div class="custom-dialog">
+        <div id="customDialogText" class="custom-dialog-text">Message</div>
+        <div id="customDialogBtns" class="custom-dialog-btns"></div>
+    </div>
+</div>
+
+<div id="imageModal" class="img-modal">
+    <img id="generatedImageResult" src="" alt="Generated Receipt">
+    <div class="modal-btn-container">
+        <button id="modalShareActionBtn" class="share-btn">📤 Share Image</button>
+        <button class="clear-btn" onclick="closeImageModal()">✕ Close</button>
+    </div>
+</div>
+
+<div id="a5-template-container">
+    <div id="a5-paper" class="a5-paper">
+        <div class="a5-header">
+            <div class="a5-title" id="a5-doc-title">Estimate Quotation</div>
+            <div class="a5-date" id="a5-doc-date"></div>
+        </div>
+        <table class="a5-table" id="a5-items-table">
+            <thead><tr id="a5-table-head"></tr></thead>
+            <tbody id="a5-table-body"></tbody>
+        </table>
+        <div class="a5-totals" id="a5-totals-area"></div>
+        <div id="a5-settlement-area"></div>
+        <div class="a5-footer">Thank you for your business!</div>
+    </div>
+</div>
+
+<!-- IOS 9 SAFE RATE CARD TEMPLATE (HIDDEN) -->
+<div id="rate-card-container" style="position: fixed; top: 0; left: 0; opacity: 0; z-index: -9999; pointer-events: none;">
+    <div id="rate-card" style="width: 540px; background: #FDFBF7; border: 4px solid #C5A059; border-radius: 8px; padding: 35px 30px; font-family: 'Times New Roman', Times, serif; box-sizing: border-box; text-align: center; color: #2F2F2F; position: relative;">
+        
+        <!-- Top Branding -->
+        <div style="font-size: 26px; font-weight: bold; color: #2C5E3B; letter-spacing: 1px; font-family: Arial, sans-serif;">GOLECHHA</div>
+        <div style="font-size: 14px; font-weight: bold; color: #2C5E3B; letter-spacing: 4px; margin-top: 2px; font-family: Arial, sans-serif;">JEWELLERS</div>
+        <div style="font-size: 12px; color: #555; margin-top: 4px; font-style: italic;">The Name You Can Trust</div>
+        
+        <!-- Title Banner -->
+        <div style="margin-top: 20px; font-size: 24px; font-weight: bold; color: #2C5E3B; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid #C5A059; display: inline-block; padding-bottom: 4px;">TODAY'S RATES</div>
+        
+        <!-- Date Badge -->
+        <div style="margin-top: 12px;">
+            <span id="rc-date" style="display: inline-block; background: #E6D5B8; border: 1px solid #C5A059; border-radius: 16px; padding: 5px 18px; font-size: 13px; color: #333; font-weight: bold; font-family: Arial, sans-serif;"></span>
+        </div>
+        
+        <!-- Rate Rows Container -->
+        <div style="margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
+            
+            <!-- 24K Row -->
+            <div style="display: flex; align-items: center; background: #FFFDF9; border: 2px solid #E6D5B8; border-radius: 8px; padding: 12px 16px;">
+                <div style="width: 50px; text-align: left;">
+                    <svg width="36" height="24" viewBox="0 0 36 24" fill="#D4AF37"><path d="M2 18L10 22V14L2 10V18Z"/><path d="M12 22L22 18V10L12 14V22Z"/><path d="M20 8L10 4L2 8L12 12L20 8Z"/></svg>
+                </div>
+                <div style="flex-grow: 1; text-align: left; font-size: 18px; font-weight: bold; color: #333; font-family: Arial, sans-serif;">GOLD 24K</div>
+                <div style="font-size: 22px; font-weight: bold; color: #2C5E3B; font-family: Arial, sans-serif;" id="rc-r24"></div>
+            </div>
+
+            <!-- 22K Row -->
+            <div style="display: flex; align-items: center; background: #FFFDF9; border: 2px solid #E6D5B8; border-radius: 8px; padding: 12px 16px;">
+                <div style="width: 50px; text-align: left;">
+                    <svg width="36" height="24" viewBox="0 0 36 24" fill="#D4AF37"><path d="M2 18L10 22V14L2 10V18Z"/><path d="M12 22L22 18V10L12 14V22Z"/><path d="M20 8L10 4L2 8L12 12L20 8Z"/></svg>
+                </div>
+                <div style="flex-grow: 1; text-align: left; font-size: 18px; font-weight: bold; color: #333; font-family: Arial, sans-serif;">GOLD 22K</div>
+                <div style="font-size: 22px; font-weight: bold; color: #2C5E3B; font-family: Arial, sans-serif;" id="rc-r22"></div>
+            </div>
+
+            <!-- 20K Row -->
+            <div style="display: flex; align-items: center; background: #FFFDF9; border: 2px solid #E6D5B8; border-radius: 8px; padding: 12px 16px;">
+                <div style="width: 50px; text-align: left;">
+                    <svg width="36" height="24" viewBox="0 0 36 24" fill="#D4AF37"><path d="M2 18L10 22V14L2 10V18Z"/><path d="M12 22L22 18V10L12 14V22Z"/><path d="M20 8L10 4L2 8L12 12L20 8Z"/></svg>
+                </div>
+                <div style="flex-grow: 1; text-align: left; font-size: 18px; font-weight: bold; color: #333; font-family: Arial, sans-serif;">GOLD 20K</div>
+                <div style="font-size: 22px; font-weight: bold; color: #2C5E3B; font-family: Arial, sans-serif;" id="rc-r20"></div>
+            </div>
+
+            <!-- Silver Row -->
+            <div style="display: flex; align-items: center; background: #FFFDF9; border: 2px solid #E6D5B8; border-radius: 8px; padding: 12px 16px;">
+                <div style="width: 50px; text-align: left;">
+                    <svg width="36" height="24" viewBox="0 0 36 24" fill="#A9A9A9"><path d="M2 18L10 22V14L2 10V18Z"/><path d="M12 22L22 18V10L12 14V22Z"/><path d="M20 8L10 4L2 8L12 12L20 8Z"/></svg>
+                </div>
+                <div style="flex-grow: 1; text-align: left; font-size: 18px; font-weight: bold; color: #333; font-family: Arial, sans-serif;">SILVER</div>
+                <div style="text-align: right;">
+                    <div style="font-size: 22px; font-weight: bold; color: #333; font-family: Arial, sans-serif;" id="rc-rAg"></div>
+                    <div style="font-size: 10px; color: #666; font-family: Arial, sans-serif; letter-spacing: 0.5px;">(PER 10 GRAMS)</div>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Disclaimer -->
+        <div style="margin-top: 20px; font-size: 11px; color: #666; font-style: italic; line-height: 1.4;">
+            The rates displayed are indicative and subject to change at the time of purchase.<br>
+            Making charges and applicable GST are additional.
+        </div>
+        
+        <!-- Footer Bar -->
+        <div style="margin-top: 25px; background: #3B1C1C; color: #FFF; border-radius: 6px; padding: 12px 10px; display: flex; justify-content: space-around; align-items: center; font-size: 10px; font-family: Arial, sans-serif;">
+            <div style="max-width: 140px; text-align: left; line-height: 1.3;">
+                📍 Main Road, Mahavir Marg, Karanja Lad, 444105
+            </div>
+            <div style="max-width: 110px; text-align: center; line-height: 1.3;">
+                ⏰ Time:<br>11:00 AM to 8:00 PM
+            </div>
+            <div style="max-width: 120px; text-align: right; line-height: 1.3; font-weight: bold;">
+                📸 @golechhajewellers
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<nav id="sidePanel" class="side-panel">
+    <div class="side-panel-header">
+        <h2>Settings</h2>
+        <button id="closeSettings" type="button">✕</button>
+    </div>
+    <div class="side-panel-content">
+        <div style="flex-grow: 1;">
+            <label>💰 24K Rate: <input type="number" id="rate24" value="15300" inputmode="decimal"></label>
+            <label>🥈 Silver Rate: <input type="number" id="silverRateSetting" value="260" inputmode="decimal"></label>
+
+            <div style="background:#FBFAFF; border:1px solid #E8E5F4; border-radius:8px; padding:10px; margin-top:15px; margin-bottom:5px;">
+                <div style="font-weight:bold; font-size:12px; color:#9B8AD9; margin-bottom:10px;">DEFAULT MAKING CHARGES</div>
+                
+                <div style="display:flex; gap:5px; font-size:10px; color:#666; margin-bottom:4px; font-weight:bold;">
+                    <div style="width:30px;">Metal</div>
+                    <div style="flex:1;">Type</div>
+                    <div style="width:60px;">Value</div>
+                </div>
+
+                <div style="display:flex; gap:5px; align-items:center; margin-bottom:6px;">
+                    <div style="width:30px; font-size:13px; font-weight:bold; color:#666;">24K</div>
+                    <div style="display:flex; flex:1; gap:2px;" data-target="defMkType24">
+                        <div class="set-mk-btn active" data-val="percent">%</div>
+                        <div class="set-mk-btn" data-val="gram">₹/g</div>
+                        <div class="set-mk-btn" data-val="piece">/pc</div>
+                    </div>
+                    <input type="hidden" id="defMkType24" value="percent">
+                    <input type="number" id="defMkVal24" style="margin:0; width:60px; padding:4px; font-size:13px; text-align:center;" placeholder="Blank" inputmode="decimal">
+                </div>
+
+                <div style="display:flex; gap:5px; align-items:center; margin-bottom:6px;">
+                    <div style="width:30px; font-size:13px; font-weight:bold; color:#666;">22K</div>
+                    <div style="display:flex; flex:1; gap:2px;" data-target="defMkType22">
+                        <div class="set-mk-btn active" data-val="percent">%</div>
+                        <div class="set-mk-btn" data-val="gram">₹/g</div>
+                        <div class="set-mk-btn" data-val="piece">/pc</div>
+                    </div>
+                    <input type="hidden" id="defMkType22" value="percent">
+                    <input type="number" id="defMkVal22" style="margin:0; width:60px; padding:4px; font-size:13px; text-align:center;" placeholder="Blank" inputmode="decimal">
+                </div>
+
+                <div style="display:flex; gap:5px; align-items:center; margin-bottom:6px;">
+                    <div style="width:30px; font-size:13px; font-weight:bold; color:#666;">20K</div>
+                    <div style="display:flex; flex:1; gap:2px;" data-target="defMkType20">
+                        <div class="set-mk-btn active" data-val="percent">%</div>
+                        <div class="set-mk-btn" data-val="gram">₹/g</div>
+                        <div class="set-mk-btn" data-val="piece">/pc</div>
+                    </div>
+                    <input type="hidden" id="defMkType20" value="percent">
+                    <input type="number" id="defMkVal20" style="margin:0; width:60px; padding:4px; font-size:13px; text-align:center;" placeholder="Blank" inputmode="decimal">
+                </div>
+
+                <div style="display:flex; gap:5px; align-items:center; margin-bottom:6px;">
+                    <div style="width:30px; font-size:13px; font-weight:bold; color:#666;">18K</div>
+                    <div style="display:flex; flex:1; gap:2px;" data-target="defMkType18">
+                        <div class="set-mk-btn active" data-val="percent">%</div>
+                        <div class="set-mk-btn" data-val="gram">₹/g</div>
+                        <div class="set-mk-btn" data-val="piece">/pc</div>
+                    </div>
+                    <input type="hidden" id="defMkType18" value="percent">
+                    <input type="number" id="defMkVal18" style="margin:0; width:60px; padding:4px; font-size:13px; text-align:center;" placeholder="Blank" inputmode="decimal">
+                </div>
+
+                <div style="display:flex; gap:5px; align-items:center;">
+                    <div style="width:30px; font-size:13px; font-weight:bold; color:#666;">Sil</div>
+                    <div style="display:flex; flex:1; gap:2px;" data-target="defMkTypeSil">
+                        <div class="set-mk-btn" data-val="percent">%</div>
+                        <div class="set-mk-btn active" data-val="gram">₹/g</div>
+                        <div class="set-mk-btn" data-val="piece">/pc</div>
+                    </div>
+                    <input type="hidden" id="defMkTypeSil" value="gram">
+                    <input type="number" id="defMkValSil" style="margin:0; width:60px; padding:4px; font-size:13px; text-align:center;" placeholder="Blank" inputmode="decimal">
+                </div>
+            </div>
+
+            <button id="toggleAdvanced" class="toggle-adv-btn" type="button">Advanced Rates ▾</button>
+            <div id="advancedMenu" class="advanced-menu">
+                <label>📉 URD Difference (₹ or %): <input type="text" id="urdDiff" value="300" inputmode="decimal"></label>
+                <label>22K Rate (₹ or %): <input type="text" id="pct22" value="94%" inputmode="decimal"></label>
+                <label>20K Rate (₹ or %): <input type="text" id="pct20" value="88%" inputmode="decimal"></label>
+                <label>18K Rate (₹ or %): <input type="text" id="pct18" value="83%" inputmode="decimal"></label>
+                <label>GST %: <input type="number" id="gstPct" value="3" inputmode="decimal"></label>
+            </div>
+            
+            <button id="closeSettingsBtn" type="button" style="margin-top:15px;">Done</button>
+        </div>
+
+        <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #E8E5F4; font-size: 11px; color: #999; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            <span>v1.0</span>
+            <button id="updateAppBtn" type="button" style="background: #E8E5F4 !important; color: #666 !important; padding: 4px 8px !important; font-size: 10px !important; width: auto !important; border-radius: 4px; margin: 0 !important; border: 1px solid #ccc !important;">Update</button>
+        </div>
+    </div>
+</nav>
+
+<nav class="top-nav">
+    <button id="toggleSettings" class="nav-btn">⚙️ Set</button>
+    <button id="navSale" class="nav-btn active">🧾 Est.</button>
+    <button id="navUrd" class="nav-btn">⚖️ URD</button>
+    <button id="navCalc" class="nav-btn">🧮 Calc</button>
+    <button id="navRates" class="nav-btn">📊 Rates</button>
+    <button id="navHistory" class="nav-btn">📜 Hist.</button>
+</nav>
+
+<div class="calculator-container" id="mainContainer">
+
+    <div id="pageSale" class="calculator page active">
+        <fieldset style="border:none; padding:0; margin:0;">
+            <div class="result" id="goldResult"></div>
+
+            <label style="display:flex; justify-content:space-between; align-items:flex-end;">
+                Metal Type
+            </label>
+            <div class="metal-selector" id="saleMetalSelector">
+                <div class="metal-btn active" data-val="24">24K</div>
+                <div class="metal-btn" data-val="22">22K</div>
+                <div class="metal-btn" data-val="20">20K</div>
+                <div class="metal-btn" data-val="18">18K</div>
+                <div class="metal-btn" data-val="silver">Sil</div>
+            </div>
+            <input type="hidden" id="metalType" value="24">
+
+            <label id="silverRateBox" style="display:none; margin-top:8px;">
+                Silver Rate ₹/gm
+                <input type="number" id="silverRateInput" inputmode="decimal">
+            </label>
+
+            <div class="input-row">
+                <div><label>⚖️ WT: <input type="number" id="goldWeight" placeholder="" inputmode="decimal"></label></div>
+                <div><label>💎 St. ₹: <input type="number" id="stoneCharge" placeholder="" inputmode="decimal"></label></div>
+            </div>
+
+            <div class="input-row" style="align-items: flex-end;">
+                <div style="flex: 1.1;">
+                    <label style="margin-bottom:4px;">MK TY:</label>
+                    <div class="metal-selector" id="makingTypeSelector" style="margin: 0;">
+                        <div class="metal-btn" data-value="percent" style="padding: 6px 0;">%</div>
+                        <div class="metal-btn active" data-value="gram" style="padding: 6px 0;">₹/g</div>
+                        <div class="metal-btn" data-value="piece" style="padding: 6px 0;">₹/pc</div>
+                    </div>
+                    <input type="hidden" id="makingType" value="gram">
+                </div>
+                <div style="flex: 0.9; display: flex; gap: 8px;">
+                    <div style="flex: 1;">
+                        <label style="margin-bottom:4px; font-size:11px; color:#9B8AD9;">Def MK:</label>
+                        <input type="text" id="quickDefMk" placeholder="-" readonly tabindex="-1" style="margin-top:0; padding:8px 4px; text-align:center; background:#E8E5F4; border-color:#ccc; color:#888; pointer-events:none;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label id="makingLabel" style="margin-bottom:4px;"><span id="makeLabelText">Temp (₹/g):</span></label>
+                        <input type="number" id="makingValue" placeholder="-" style="margin-top:0; padding:8px 4px; text-align:center;" inputmode="decimal">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 10px; margin-bottom: -5px;">
+                <label id="gstLabelContainer" style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: bold; color: #666; cursor: pointer; -webkit-user-select: none; user-select: none;">
+                    <input type="checkbox" id="applyGstCb" checked style="width: 18px; height: 18px; margin: 0;"> Apply GST
+                </label>
+            </div>
+
+            <div class="button-row">
+                <button id="calcButton" type="button">Calculate</button>
+                <button id="addToBillBtn" type="button" class="add-btn">➕ Add Item</button>
+            </div>
+
+            <div id="billPanel" class="bill-panel hide">
+                <div class="bill-header">Estimate Quotation</div>
+
+                <div class="bill-table-head">
+                    <span class="bill-col item-col">Item</span>
+                    <span class="bill-col">Rate</span>
+                    <span class="bill-col">WT</span>
+                    <span class="bill-col">MK</span>
+                    <span class="bill-col">ST</span>
+                    <span class="bill-col">Tax</span>
+                    <span class="bill-col total-col">Total</span>
+                    <span class="bill-col action-col"></span>
+                </div>
+
+                <div id="billItemsList"></div>
+
+                <div class="grand-total-amount">
+                    <div class="total-row">
+                        <span>Gold Total (<span id="gtGoldWt">0.000</span>g):</span>
+                        <span>₹<span id="gtGoldVal">0.00</span></span>
+                    </div>
+                    <div class="total-row silver-total-row" id="gtSilverRow">
+                        <span>Silver Total (<span id="gtSilverWt">0.000</span>g):</span>
+                        <span>₹<span id="gtSilverVal">0.00</span></span>
+                    </div>
+                    <div class="total-row grand-final-row">
+                        <span>Grand Total:</span>
+                        <span>₹<span id="grandTotalValue">0</span></span>
+                    </div>
+                </div>
+
+                <div class="bill-actions">
+                    <button id="saveBillBtn" type="button" class="add-btn">💾 Save</button>
+                    <button id="shareBillBtn" type="button" class="share-btn">💬 Text</button>
+                    <button id="imageBillBtn" type="button" class="img-btn">🖼️ Image</button>
+                    <button id="clearBillBtn" type="button" class="clear-btn">Clear</button>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+    <div id="pageUrd" class="calculator page">
+        <fieldset style="border:none; padding:0; margin:0;">
+            <div class="result" id="urdResult">
+                <div class="result-row">
+                    <div><span class="result-label">Net Wt</span><span class="result-value">0.000g</span></div>
+                    <div><span class="result-label">Fine Wt</span><span class="result-value">0.000g</span></div>
+                </div>
+                <div class="final-total-box urd-total-box">💰 Value: ₹0.00</div>
+            </div>
+
+            <label>Metal Type</label>
+            <div class="metal-selector" id="urdMetalSelector">
+                <div class="metal-btn active" data-val="gold">Gold</div>
+                <div class="metal-btn" data-val="silver">Silver</div>
+            </div>
+            <input type="hidden" id="urdMetalType" value="gold">
+
+            <div class="input-row">
+                <div><label>⚖️ Gross Wt: <input type="number" id="urdWt" placeholder="" step="0.001" inputmode="decimal"></label></div>
+                <div><label>➖ Less Wt: <input type="number" id="urdLessWt" placeholder="" step="0.001" inputmode="decimal"></label></div>
+            </div>
+
+            <div class="input-row">
+                <div><label>📊 Purity (%): <input type="number" id="urdPct" placeholder="" step="0.1" inputmode="decimal"></label></div>
+                <div><label>💵 Rate (₹): <input type="number" id="urdRate" value="16580" inputmode="decimal"></label></div>
+            </div>
+
+            <div class="button-row">
+                <button id="calcUrdBtn" type="button">Calculate</button>
+                <button id="addUrdBtn" type="button" class="add-btn">➕ Add URD</button>
+            </div>
+
+            <div id="urdBillPanel" class="bill-panel hide">
+                <div class="bill-header">Old Metal (URD) Items</div>
+
+                <div class="bill-table-head">
+                    <span class="urd-col item-col">Item</span>
+                    <span class="urd-col">Rate</span>
+                    <span class="urd-col">GWt</span>
+                    <span class="urd-col">LWt</span>
+                    <span class="urd-col">Net</span>
+                    <span class="urd-col">Fine</span>
+                    <span class="urd-col">%</span>
+                    <span class="urd-col total-col">Total</span>
+                    <span class="urd-col action-col"></span>
+                </div>
+
+                <div id="urdItemsList"></div>
+
+                <div class="grand-total-amount">
+                    
+                    <div class="total-row" style="color:#666; font-size:11px; justify-content:space-between; border-bottom:1px solid #E8E5F4; padding-bottom:6px; margin-bottom:6px;">
+                        <span><b>GWt:</b> <span id="urdTotalGross">0.00</span>g</span>
+                        <span><b>LWt:</b> <span id="urdTotalLess">0.00</span>g</span>
+                        <span><b>Net:</b> <span id="urdTotalNet">0.00</span>g</span>
+                        <span><b>Fine:</b> <span id="urdTotalFine">0.00</span>g</span>
+                    </div>
+
+                    <div class="total-row">
+                        <span>Gold Value (<span id="urdGoldWt">0.000</span>g):</span>
+                        <span>₹<span id="urdGoldVal">0.00</span></span>
+                    </div>
+                    <div class="total-row silver-total-row" id="urdSilverRow">
+                        <span>Silver Value (<span id="urdSilverWt">0.000</span>g):</span>
+                        <span>₹<span id="urdSilverVal">0.00</span></span>
+                    </div>
+                    <div class="total-row grand-final-row" style="color:#4CAF50;">
+                        <span>Grand Total:</span>
+                        <span>₹<span id="urdGrandTotalValue">0</span></span>
+                    </div>
+                </div>
+
+                <div class="bill-actions">
+                    <button id="putSaleBtn" type="button" class="settle-btn">🔄 Put Est.</button>
+                    <button id="saveUrdBtn" type="button" class="add-btn">💾 Save</button>
+                    <button id="shareUrdBtn" type="button" class="share-btn">💬 Text</button>
+                    <button id="imageUrdBtn" type="button" class="img-btn">🖼️ Image</button>
+                    <button id="clearUrdBtn" type="button" class="clear-btn">Clear</button>
+                </div>
+
+                <div id="settlementBox" class="settlement-box hide">
+                    <div class="set-row">
+                        <span>Estimate Total:</span>
+                        <span id="setSaleTotal">₹0</span>
+                    </div>
+                    <div class="set-row" style="color: #E53935;">
+                        <span>Less Old Metal:</span>
+                        <span id="setUrdTotal">- ₹0</span>
+                    </div>
+                    <div class="set-final">
+                        <span>Final Amount:</span>
+                        <span id="setFinalAmount">₹0</span>
+                    </div>
+                    <div id="setPayStatus" style="text-align:right; font-size:11px; margin-top:2px; font-weight:bold;"></div>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+    <div id="pageCalc" class="calculator page">
+        <h3 style="color:#9B8AD9; text-align:center; margin-top:0; margin-bottom: 5px;">Smart Calculator</h3>
+        
+        <div class="smart-calc-wrapper">
+            <div class="smart-calc-display-wrapper">
+                <div class="smart-calc-display" id="scDisplay"></div>
+                <div class="smart-calc-preview-row">
+                    <div class="smart-calc-preview" id="scPreview"></div>
+                    <button class="smart-calc-backspace-btn" onclick="scHandleBackspace()">⌫</button>
+                </div>
+            </div>
+
+            <div class="smart-calc-btn-grid">
+                <button class="smart-calc-btn top-op" onclick="scClearCalculator()">C</button>
+                <button class="smart-calc-btn top-op" onclick="scHandleParenthesis()">()</button>
+                <button class="smart-calc-btn top-op" onclick="scUpdateCalculation('%')">%</button>
+                <button class="smart-calc-btn operator" onclick="scUpdateCalculation('/')">÷</button>
+
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('7')">7</button>
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('8')">8</button>
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('9')">9</button>
+                <button class="smart-calc-btn operator" onclick="scUpdateCalculation('*')">×</button>
+
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('4')">4</button>
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('5')">5</button>
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('6')">6</button>
+                <button class="smart-calc-btn operator" onclick="scUpdateCalculation('-')">−</button>
+
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('1')">1</button>
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('2')">2</button>
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('3')">3</button>
+                <button class="smart-calc-btn operator" onclick="scUpdateCalculation('+')">+</button>
+
+                <button class="smart-calc-btn number" onclick="scHandlePlusMinus()">+/-</button>
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('0')">0</button>
+                <button class="smart-calc-btn number" onclick="scUpdateCalculation('.')">.</button>
+                <button class="smart-calc-btn equal" onclick="scHandleEquals()">=</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pageRates" class="calculator page">
+        <h3 style="color:#9B8AD9; text-align:center; margin-top:0; border-bottom:1px solid #E8E5F4; padding-bottom:10px;">Live Rate Board</h3>
+        <div class="result" id="rateBoardContent" style="padding: 15px; margin-top: 15px;"></div>
+    </div>
+
+    <div id="pageHistory" class="calculator page">
+        <h3 style="color:#9B8AD9; text-align:center; margin-top:0; border-bottom:1px solid #E8E5F4; padding-bottom:10px;">Saved Bills History</h3>
+        <div class="result" style="text-align:center; font-size:12px; color:#666;">
+            👆 Tap a saved bill below to reload its items AND restore the exact gold rates from that day!
+        </div>
+        <div id="historyList" style="margin-top:15px;"></div>
+        <button id="clearHistoryBtn" type="button" class="clear-btn" style="margin-top: 15px;">🗑️ Clear All History</button>
+    </div>
+
+</div>
+
+<footer>
+    <span class="footer-title">Jewellery Calculator</span><br>
+    <div style="margin-top: 8px;">
+        <span style="font-size: 12px; color: #888; letter-spacing: 1px;">Developed By ArpitGolechha</span><br>
+    </div>
+</footer>
+
+<script>
+    // --- HELPER FUNCTIONS FOR IOS 9 ---
+    function getClosest(el, selector) {
+        while (el && el !== document) {
+            if (el.matches && el.matches(selector)) return el;
+            if (el.webkitMatchesSelector && el.webkitMatchesSelector(selector)) return el;
+            el = el.parentElement;
+        }
+        return null;
+    }
+
+    // --- CUSTOM DIALOG LOGIC ---
+    function customAlert(msg) {
+        document.getElementById('customDialogText').innerText = msg;
+        document.getElementById('customDialogBtns').innerHTML = '<button class="custom-dialog-btn btn-ok" onclick="closeCustomDialog()">OK</button>';
+        document.getElementById('customDialogOverlay').classList.add('show');
+    }
+    
+    function customConfirm(msg, onConfirm) {
+        document.getElementById('customDialogText').innerText = msg;
+        document.getElementById('customDialogBtns').innerHTML = 
+            '<button class="custom-dialog-btn btn-cancel" onclick="closeCustomDialog()">Cancel</button>' +
+            '<button class="custom-dialog-btn btn-confirm" id="confirmYesBtn">Confirm</button>';
+        document.getElementById('customDialogOverlay').classList.add('show');
+        document.getElementById('confirmYesBtn').onclick = function() {
+            closeCustomDialog();
+            onConfirm();
+        };
+    }
+
+    function customPrompt(title, defaultVal, onConfirm) {
+        document.getElementById('customDialogText').innerHTML = 
+            '<div style="margin-bottom: 15px; color: #9B8AD9;">' + title + '</div>' +
+            '<input type="text" id="promptInput" value="' + defaultVal + '" style="width: 80%; padding: 10px; font-size: 18px; text-align: center; border: 2px solid #9B8AD9; border-radius: 8px;" inputmode="text">';
+        document.getElementById('customDialogBtns').innerHTML = 
+            '<button class="custom-dialog-btn btn-cancel" onclick="closeCustomDialog()">Cancel</button>' +
+            '<button class="custom-dialog-btn btn-confirm" id="confirmPromptBtn" style="background: #9B8AD9;">Save</button>';
+        document.getElementById('customDialogOverlay').classList.add('show');
+        
+        setTimeout(function() {
+            var inp = document.getElementById('promptInput');
+            if(inp) { inp.focus(); inp.select(); }
+        }, 100);
+
+        document.getElementById('confirmPromptBtn').onclick = function() {
+            var val = document.getElementById('promptInput').value;
+            closeCustomDialog();
+            onConfirm(val);
+        };
+    }
+    
+    window.closeCustomDialog = function() {
+        document.getElementById('customDialogOverlay').classList.remove('show');
+    };
+
+    // --- PULL TO REFRESH LOGIC ---
+    var pStartY = 0;
+    var isPulling = false;
+    var ptrIndicator = document.getElementById('ptr-indicator');
+    var mainContainer = document.getElementById('mainContainer');
+
+    mainContainer.addEventListener('touchstart', function(e) {
+        if (mainContainer.scrollTop <= 0) {
+            pStartY = e.touches[0].clientY;
+            isPulling = true;
+        }
+    }, {passive: true});
+
+    mainContainer.addEventListener('touchmove', function(e) {
+        if (!isPulling) return;
+        var pCurrentY = e.touches[0].clientY;
+        var pull = pCurrentY - pStartY;
+        
+        if (pull > 0 && mainContainer.scrollTop <= 0) {
+            ptrIndicator.style.top = Math.min(pull - 40, 20) + 'px';
+            ptrIndicator.style.transform = 'translateX(-50%) rotate(' + pull + 'deg)';
+        }
+    }, {passive: true});
+
+    mainContainer.addEventListener('touchend', function(e) {
+        if (!isPulling) return;
+        var pCurrentY = e.changedTouches[0].clientY;
+        var pull = pCurrentY - pStartY;
+        isPulling = false;
+        
+        ptrIndicator.style.top = '-50px';
+        ptrIndicator.style.transform = 'translateX(-50%) rotate(0deg)';
+        
+        if (pull > 150 && mainContainer.scrollTop <= 0) {
+            triggerSoftRefresh();
+        }
+    });
+
+    function triggerSoftRefresh() {
+        customConfirm("Start a new transaction? This will clear current items without deleting history.", function() {
+            billItems = [];
+            urdBillItems = [];
+            saleGrandTotalNum = 0;
+            urdGrandTotalNum = 0;
+            
+            document.getElementById('goldWeight').value = "";
+            document.getElementById('stoneCharge').value = "";
+            document.getElementById('makingValue').value = "";
+            
+            document.getElementById('urdWt').value = "";
+            document.getElementById('urdLessWt').value = "";
+            document.getElementById('urdPct').value = "";
+            
+            updateSaleMetalUI("24");
+            
+            document.getElementById('silverRateInput').value = document.getElementById('silverRateSetting').value;
+            
+            renderBillPanel();
+            renderUrdBillPanel();
+            calculateGold();
+            calculateURD();
+            
+            document.getElementById('settlementBox').classList.add('hide');
+            switchPage(navSale, pageSale);
+        });
+    }
+
+    // --- TOP NAVIGATION LOGIC ---
+    var navSale = document.getElementById('navSale');
+    var navUrd = document.getElementById('navUrd');
+    var navCalc = document.getElementById('navCalc');
+    var navRates = document.getElementById('navRates');
+    var navHistory = document.getElementById('navHistory');
+    
+    var pageSale = document.getElementById('pageSale');
+    var pageUrd = document.getElementById('pageUrd');
+    var pageCalc = document.getElementById('pageCalc');
+    var pageRates = document.getElementById('pageRates');
+    var pageHistory = document.getElementById('pageHistory');
+
+    function switchPage(activeNav, activePage) {
+        var navs = [navSale, navUrd, navCalc, navRates, navHistory];
+        for(var i=0; i<navs.length; i++) navs[i].classList.remove('active');
+        var pages = [pageSale, pageUrd, pageCalc, pageRates, pageHistory];
+        for(var j=0; j<pages.length; j++) pages[j].classList.remove('active');
+        
+        activeNav.classList.add('active');
+        activePage.classList.add('active');
+        mainContainer.scrollTop = 0; 
+    }
+
+    navSale.addEventListener('click', function() { switchPage(navSale, pageSale); });
+    navUrd.addEventListener('click', function() { switchPage(navUrd, pageUrd); });
+    navCalc.addEventListener('click', function() { switchPage(navCalc, pageCalc); });
+    navRates.addEventListener('click', function() { updateRateBoard(); switchPage(navRates, pageRates); });
+    navHistory.addEventListener('click', function() { renderHistory(); switchPage(navHistory, pageHistory); });
+
+    // --- SIDE PANEL LOGIC ---
+    var sidePanel = document.getElementById('sidePanel');
+    var overlay = document.getElementById('sidebarOverlay');
+    var advMenu = document.getElementById('advancedMenu');
+    var advBtn = document.getElementById('toggleAdvanced');
+
+    function closeSettingsPanel() { sidePanel.classList.remove('open'); overlay.classList.remove('show'); }
+
+    document.getElementById('toggleSettings').addEventListener('click', function() { sidePanel.classList.add('open'); overlay.classList.add('show'); });
+    document.getElementById('closeSettings').addEventListener('click', closeSettingsPanel);
+    document.getElementById('closeSettingsBtn').addEventListener('click', closeSettingsPanel);
+    overlay.addEventListener('click', closeSettingsPanel);
+
+    advBtn.addEventListener('click', function() {
+        advMenu.classList.toggle('show');
+        advBtn.innerHTML = advMenu.classList.contains('show') ? "Hide Settings ▴" : "Advanced Settings ▾";
+    });
+
+    document.getElementById('updateAppBtn').addEventListener('click', function() {
+        if (window.AndroidBridge && window.AndroidBridge.checkForUpdate) {
+            window.AndroidBridge.checkForUpdate();
+        } else {
+            customAlert("Refreshing app...");
+            setTimeout(function() {
+                window.location.href = window.location.pathname + '?v=' + new Date().getTime();
+            }, 1000);
+        }
+    });
+
+    function saveAllRates() {
+        var settingsInputs = [
+            'rate24', 'urdDiff', 'pct22', 'pct20', 'pct18', 'gstPct', 'silverRateSetting', 
+            'defMkType24', 'defMkVal24', 'defMkType22', 'defMkVal22', 'defMkType20', 'defMkVal20', 'defMkType18', 'defMkVal18', 'defMkTypeSil', 'defMkValSil'
+        ];
+        for(var i=0; i<settingsInputs.length; i++) {
+            var k = settingsInputs[i];
+            var el = document.getElementById(k);
+            if(el) localStorage.setItem(k, el.value);
+        }
+        updateRateBoard();
+    }
+
+    function loadSettings() {
+        var defaultSettings = {
+            'rate24': '15300', 'urdDiff': '300', 'pct22': '94%', 'pct20': '88%', 'pct18': '83%', 'gstPct': '3', 'silverRateSetting': '260',
+            'defMkType24': 'gram', 'defMkVal24': '',
+            'defMkType22': 'percent', 'defMkVal22': '10',
+            'defMkType20': 'percent', 'defMkVal20': '10',
+            'defMkType18': 'percent', 'defMkVal18': '10',
+            'defMkTypeSil': 'gram', 'defMkValSil': ''
+        };
+
+        var keys = Object.keys(defaultSettings);
+        for(var i=0; i<keys.length; i++) {
+            var k = keys[i];
+            var el = document.getElementById(k);
+            if(el) {
+                var storedVal = localStorage.getItem(k);
+                el.value = (storedVal !== null) ? storedVal : defaultSettings[k];
+                
+                if (k.indexOf('defMkType') === 0) {
+                    var group = document.querySelector('[data-target="' + k + '"]');
+                    if(group) {
+                        var btns = group.querySelectorAll('.set-mk-btn');
+                        for(var b=0; b<btns.length; b++) {
+                            btns[b].classList.toggle('active', btns[b].getAttribute('data-val') === el.value);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (document.getElementById('silverRateSetting').value) {
+            document.getElementById('silverRateInput').value = document.getElementById('silverRateSetting').value;
+        }
+    }
+
+    function computeKaratRate(k) {
+        var base = parseFloat(document.getElementById('rate24').value) || 0;
+        if (k === 24) return roundToTen(base);
+        
+        var str = String(document.getElementById('pct' + k).value).trim();
+        
+        if (str.charAt(str.length - 1) === '.') {
+            return roundToTen(parseFloat(str) || 0);
+        } else {
+            var pct = parseFloat(str.replace('%', '')) || 0;
+            return roundToTen(base * (pct / 100));
+        }
+    }
+
+    function calculateDefaultUrdRate() {
+        var base = parseFloat(document.getElementById('rate24').value) || 0;
+        var diffInput = String(document.getElementById('urdDiff').value).trim();
+        
+        if (diffInput.charAt(diffInput.length - 1) === '.') {
+            var flat = parseFloat(diffInput) || 0;
+            return Math.round(base - flat);
+        } else {
+            var pct = parseFloat(diffInput.replace('%', '')) || 0;
+            return Math.round(base - (base * (pct / 100)));
+        }
+    }
+
+    function updateRateBoard() {
+        if(!document.getElementById('rateBoardContent')) return;
+        var r24 = computeKaratRate(24);
+        var r22 = computeKaratRate(22);
+        var r20 = computeKaratRate(20);
+        var r18 = computeKaratRate(18);
+        var rAg = parseFloat(document.getElementById('silverRateSetting').value) || 0;
+
+        document.getElementById('rateBoardContent').innerHTML = 
+            '<div class="result-row" style="margin-bottom:12px;"><div><span class="result-label" style="font-size:12px;">Gold 24K</span><span class="result-value" style="font-size:16px;">₹' + r24 + ' /gm</span></div></div>' +
+            '<div class="result-row" style="margin-bottom:12px;"><div><span class="result-label" style="font-size:12px;">Gold 22K</span><span class="result-value" style="font-size:16px;">₹' + r22 + ' /gm</span></div></div>' +
+            '<div class="result-row" style="margin-bottom:12px;"><div><span class="result-label" style="font-size:12px;">Gold 20K</span><span class="result-value" style="font-size:16px;">₹' + r20 + ' /gm</span></div></div>' +
+            '<div class="result-row" style="margin-bottom:12px;"><div><span class="result-label" style="font-size:12px;">Gold 18K</span><span class="result-value" style="font-size:16px;">₹' + r18 + ' /gm</span></div></div>' +
+            '<div class="result-row"><div><span class="result-label" style="font-size:12px; color:#607D8B;">Silver</span><span class="result-value" style="font-size:16px; color:#607D8B;">₹' + rAg + ' /gm</span></div></div>';
+    }
+
+    function updateSaleBoxRates() {
+        var rates = {
+            '24': computeKaratRate(24),
+            '22': computeKaratRate(22),
+            '20': computeKaratRate(20),
+            '18': computeKaratRate(18),
+            'silver': parseFloat(document.getElementById('silverRateInput').value) || parseFloat(document.getElementById('silverRateSetting').value) || 0
+        };
+
+        var activeVal = document.getElementById('metalType').value;
+        var buttons = document.querySelectorAll('#saleMetalSelector .metal-btn');
+
+        for(var i=0; i<buttons.length; i++) {
+            var btn = buttons[i];
+            var val = btn.getAttribute('data-val');
+            var label = val === 'silver' ? 'Sil' : val + 'K';
+            
+            if (val === activeVal) {
+                btn.innerHTML = label + '<br><span style="font-size:13px; font-weight:bold; color:#FFF; display:block; margin-top:2px;">₹' + rates[val] + '</span>';
+            } else {
+                btn.innerHTML = label + '<br><span style="font-size:11px; font-weight:normal; color:#999; display:block; margin-top:2px;">₹' + rates[val] + '</span>';
+            }
+        }
+    }
+
+    function updateSaleMetalUI(val) {
+        document.getElementById('metalType').value = val;
+        
+        var btns = document.querySelectorAll('#saleMetalSelector .metal-btn');
+        for(var i=0; i<btns.length; i++) {
+            btns[i].classList.toggle('active', btns[i].getAttribute('data-val') === val);
+        }
+        
+        var box = document.getElementById("silverRateBox");
+        if(val === "silver") {
+            box.style.display = "block";
+            if (!document.getElementById("silverRateInput").value) {
+                document.getElementById("silverRateInput").value = document.getElementById("silverRateSetting").value;
+            }
+            document.getElementById('applyGstCb').checked = false;
+        } else { 
+            box.style.display = "none"; 
+            document.getElementById('applyGstCb').checked = true;
+        }
+
+        var settingTypeMap = { '24': 'defMkType24', '22': 'defMkType22', '20': 'defMkType20', '18': 'defMkType18', 'silver': 'defMkTypeSil' };
+        var settingValMap = { '24': 'defMkVal24', '22': 'defMkVal22', '20': 'defMkVal20', '18': 'defMkVal18', 'silver': 'defMkValSil' };
+        
+        var defaultType = document.getElementById(settingTypeMap[val]).value;
+        var defaultVal = document.getElementById(settingValMap[val]).value;
+
+        document.getElementById('makingType').value = defaultType;
+        var unitTxt = defaultType === 'percent' ? '(%)' : (defaultType === 'gram' ? '(₹/g)' : '(₹/pc)');
+        document.getElementById('makeLabelText').innerText = 'Temp ' + unitTxt + ':';
+        
+        var mkBtns = document.querySelectorAll('#makingTypeSelector .metal-btn');
+        for(var m=0; m<mkBtns.length; m++) {
+            mkBtns[m].classList.toggle('active', mkBtns[m].getAttribute('data-value') === defaultType);
+        }
+
+        document.getElementById('quickDefMk').value = defaultVal;
+        
+        updateSaleBoxRates(); 
+        calculateGold();
+    }
+
+    var saleMetalBtns = document.querySelectorAll('#saleMetalSelector .metal-btn');
+    for(var sm=0; sm<saleMetalBtns.length; sm++) {
+        saleMetalBtns[sm].addEventListener('click', function() { updateSaleMetalUI(this.getAttribute('data-val')); });
+    }
+
+    function updateUrdMetalUI(val) {
+        document.getElementById('urdMetalType').value = val;
+        var urdBtns = document.querySelectorAll('#urdMetalSelector .metal-btn');
+        for(var u=0; u<urdBtns.length; u++) {
+            urdBtns[u].classList.toggle('active', urdBtns[u].getAttribute('data-val') === val);
+        }
+        
+        if(val === 'silver') { 
+            document.getElementById('urdRate').value = document.getElementById('silverRateSetting').value; 
+        } else { 
+            document.getElementById('urdRate').value = localStorage.getItem('lastUrdGoldRate') || calculateDefaultUrdRate(); 
+        }
+        calculateURD();
+    }
+
+    var urdMetalBtns = document.querySelectorAll('#urdMetalSelector .metal-btn');
+    for(var um=0; um<urdMetalBtns.length; um++) {
+        urdMetalBtns[um].addEventListener('click', function() { updateUrdMetalUI(this.getAttribute('data-val')); });
+    }
+
+    // --- PAGE 1: ESTIMATE LOGIC ---
+    var currentFinalTotal = 0;
+    var billItems = [];
+    var saleGrandTotalNum = 0;
+
+    function roundToTen(x) { return Math.round(x / 10) * 10; }
+
+    function calculateGold() {
+        var type = document.getElementById('metalType').value;
+        var rate = type === "silver" ? (parseFloat(document.getElementById("silverRateInput").value) || 0) : computeKaratRate(parseInt(type));
+        var weight = parseFloat(document.getElementById('goldWeight').value) || 0;
+        var makingType = document.getElementById('makingType').value;
+        var stone = parseFloat(document.getElementById('stoneCharge').value) || 0;
+        
+        var tempMk = document.getElementById('makingValue').value;
+        var defMk = document.getElementById('quickDefMk').value;
+        var makingVal = tempMk !== "" ? parseFloat(tempMk) : (parseFloat(defMk) || 0);
+
+        var applyGst = document.getElementById('applyGstCb').checked;
+        var gstPctValue = document.getElementById('gstPct').value || 0; 
+        var gst = applyGst ? (parseFloat(gstPctValue) / 100) : 0;
+        var displayGstPct = applyGst ? gstPctValue : 0; 
+
+        var goldValue = rate * weight;
+        var makingCharge = (makingType === "percent") ? (goldValue * makingVal / 100) : (makingType === "gram" ? makingVal * weight : makingVal);
+        var subTotal = goldValue + makingCharge + stone;
+        var gstAmount = subTotal * gst;
+        var finalTotal = subTotal + gstAmount;
+
+        currentFinalTotal = finalTotal;
+
+        document.getElementById("goldResult").innerHTML = 
+            '<div class="result-row">' +
+                '<div><span class="result-label">M Value</span><span class="result-value">₹' + goldValue.toFixed(2) + '</span></div>' +
+                '<div><span class="result-label">MK₹</span><span class="result-value">₹' + makingCharge.toFixed(2) + '</span></div>' +
+            '</div>' +
+            '<div class="result-row">' +
+                '<div><span class="result-label">St. ₹</span><span class="result-value">₹' + stone.toFixed(2) + '</span></div>' +
+                '<div><span class="result-label">GST (' + displayGstPct + '%)</span><span class="result-value">₹' + gstAmount.toFixed(2) + '</span></div>' +
+            '</div>' +
+            '<div class="final-total-box">💰 Final Total: ₹' + finalTotal.toFixed(2) + '</div>';
+    }
+
+    function renderBillPanel() {
+        var panel = document.getElementById('billPanel');
+        var list = document.getElementById('billItemsList');
+
+        if (billItems.length === 0) {
+            panel.classList.add('hide');
+            saleGrandTotalNum = 0;
+            return;
+        }
+
+        panel.classList.remove('hide');
+        list.innerHTML = '';
+
+        var goldVal = 0, goldWt = 0, silverVal = 0, silverWt = 0;
+
+        for(var i=0; i<billItems.length; i++) {
+            var item = billItems[i];
+            if(item.type === 'silver') { silverVal += item.total; silverWt += item.weight; }
+            else { goldVal += item.total; goldWt += item.weight; }
+
+            var itemName = item.name || (item.type === 'silver' ? 'Sil ' + (i + 1) : item.type + 'K ' + (i + 1));
+            var taxDisplay = (item.taxPct !== undefined && item.taxPct > 0) ? item.taxPct + '%' : '0%';
+            
+            list.innerHTML += 
+                '<div class="bill-item">' +
+                    '<span class="bill-col item-col item-name-col" data-index="' + i + '">' + itemName + '</span>' +
+                    '<span class="bill-col">' + item.rate + '</span>' +
+                    '<span class="bill-col">' + item.weight + '</span>' +
+                    '<span class="bill-col">' + item.make + '</span>' +
+                    '<span class="bill-col">' + item.stone + '</span>' +
+                    '<span class="bill-col">' + taxDisplay + '</span>' +
+                    '<span class="bill-col total-col">' + item.total.toFixed(0) + '</span>' +
+                    '<span class="bill-col action-col">' +
+                        '<span class="edit-btn" data-index="' + i + '">✎</span>' +
+                        '<span class="remove-btn" data-index="' + i + '">✖</span>' +
+                    '</span>' +
+                '</div>';
+        }
+
+        document.getElementById('gtGoldWt').innerText = goldWt.toFixed(3);
+        document.getElementById('gtGoldVal').innerText = goldVal.toFixed(2);
+
+        var slvRow = document.getElementById('gtSilverRow');
+        if(silverVal > 0) {
+            slvRow.style.display = 'flex';
+            document.getElementById('gtSilverWt').innerText = silverWt.toFixed(3);
+            document.getElementById('gtSilverVal').innerText = silverVal.toFixed(2);
+        } else { slvRow.style.display = 'none'; }
+
+        saleGrandTotalNum = Math.round(goldVal + silverVal);
+        document.getElementById('grandTotalValue').innerText = saleGrandTotalNum.toString();
+
+        if(!document.getElementById('settlementBox').classList.contains('hide')){ calculateSettlement(); }
+    }
+
+    document.getElementById('addToBillBtn').addEventListener('click', function() {
+        if (currentFinalTotal > 0) {
+            var typeVal = document.getElementById('metalType').value;
+            var rateVal = typeVal === "silver" ? (parseFloat(document.getElementById("silverRateInput").value) || 0) : computeKaratRate(parseInt(typeVal));
+            
+            var tempMk = document.getElementById('makingValue').value;
+            var defMk = document.getElementById('quickDefMk').value;
+            var finalMakeVal = tempMk !== "" ? parseFloat(tempMk) : (parseFloat(defMk) || 0);
+
+            var _wt = parseFloat(document.getElementById('goldWeight').value || "0");
+            var _stone = parseFloat(document.getElementById('stoneCharge').value || "0");
+            var _mkType = document.getElementById('makingType').value;
+            var _goldVal = rateVal * _wt;
+            var _mk = (_mkType === "percent") ? (_goldVal * finalMakeVal / 100) : (_mkType === "gram" ? finalMakeVal * _wt : finalMakeVal);
+            var _sub = _goldVal + _mk + _stone;
+            
+            var _gstPctValue = document.getElementById('applyGstCb').checked ? parseFloat(document.getElementById('gstPct').value || "0") : 0;
+            var _tax = _sub * (_gstPctValue / 100);
+            
+            var defaultName = typeVal === 'silver' ? 'Sil ' + (billItems.length + 1) : typeVal + 'K ' + (billItems.length + 1);
+
+            billItems.push({
+                name: defaultName,
+                type: typeVal,
+                makeType: _mkType,
+                rate: rateVal,
+                weight: _wt,
+                make: finalMakeVal,
+                stone: _stone,
+                tax: _tax,
+                taxPct: _gstPctValue,
+                hasGst: document.getElementById('applyGstCb').checked,
+                total: currentFinalTotal
+            });
+            renderBillPanel();
+            
+            document.getElementById('goldWeight').value = "";
+            document.getElementById('stoneCharge').value = "";
+            calculateGold();
+            
+        } else { customAlert("Please enter a weight before adding to the bill."); }
+    });
+
+    document.getElementById('billItemsList').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-btn')) {
+            billItems.splice(parseInt(e.target.getAttribute('data-index')), 1);
+            renderBillPanel();
+        }
+        else if (e.target.classList.contains('edit-btn')) {
+            var index = parseInt(e.target.getAttribute('data-index'));
+            var item = billItems[index];
+
+            updateSaleMetalUI(item.type);
+
+            document.getElementById('makingType').value = item.makeType;
+            var unitTxt = item.makeType === 'percent' ? '(%)' : (item.makeType === 'gram' ? '(₹/g)' : '(₹/pc)');
+            document.getElementById('makeLabelText').innerText = 'Temp ' + unitTxt + ':';
+            
+            document.getElementById('applyGstCb').checked = item.hasGst !== undefined ? item.hasGst : (item.type !== 'silver');
+
+            var mkBtns = document.querySelectorAll('#makingTypeSelector .metal-btn');
+            for(var m=0; m<mkBtns.length; m++) {
+                mkBtns[m].classList.toggle('active', mkBtns[m].getAttribute('data-value') === item.makeType);
+            }
+            
+            document.getElementById('goldWeight').value = item.weight;
+            document.getElementById('makingValue').value = item.make;
+            document.getElementById('stoneCharge').value = item.stone;
+
+            billItems.splice(index, 1);
+            renderBillPanel();
+            calculateGold();
+            mainContainer.scrollTop = 0;
+        }
+    });
+
+    document.getElementById('clearBillBtn').addEventListener('click', function() { 
+        if(billItems.length === 0) return;
+        customConfirm("Clear all items from this estimate?", function() {
+            billItems = []; 
+            renderBillPanel(); 
+        });
+    });
+
+    // --- PAGE 2: URD LOGIC ---
+    var currentUrdTotal = 0;
+    var urdBillItems = [];
+    var urdGrandTotalNum = 0;
+
+    function updateUrdRateSystem() {
+        localStorage.removeItem('lastUrdGoldRate');
+        var currentMetal = document.getElementById('urdMetalType').value;
+        if(currentMetal === 'gold') {
+            document.getElementById('urdRate').value = calculateDefaultUrdRate();
+            calculateURD();
+        }
+    }
+
+    function calculateURD() {
+        var wt = parseFloat(document.getElementById('urdWt').value) || 0;
+        var lessWt = parseFloat(document.getElementById('urdLessWt').value) || 0;
+        var pctInput = document.getElementById('urdPct').value;
+        
+        var pct = pctInput === "" ? 100 : parseFloat(pctInput) || 0;
+        var rate = parseFloat(document.getElementById('urdRate').value) || 0; 
+
+        var netWt = wt - lessWt;
+        var fineWt = netWt * (pct / 100);
+        var totalVal = fineWt * rate;
+
+        currentUrdTotal = totalVal;
+
+        document.getElementById("urdResult").innerHTML = 
+            '<div class="result-row">' +
+                '<div><span class="result-label">Net Wt</span><span class="result-value">' + netWt.toFixed(3) + 'g</span></div>' +
+                '<div><span class="result-label">Fine Wt</span><span class="result-value">' + fineWt.toFixed(3) + 'g</span></div>' +
+            '</div>' +
+            '<div class="final-total-box urd-total-box">💰 Value: ₹' + totalVal.toFixed(2) + '</div>';
+    }
+
+    function renderUrdBillPanel() {
+        var panel = document.getElementById('urdBillPanel');
+        var list = document.getElementById('urdItemsList');
+
+        if (urdBillItems.length === 0) {
+            panel.classList.add('hide');
+            urdGrandTotalNum = 0;
+            document.getElementById('settlementBox').classList.add('hide');
+            return;
+        }
+
+        panel.classList.remove('hide');
+        list.innerHTML = '';
+
+        var goldVal = 0, goldWt = 0, silverVal = 0, silverWt = 0;
+        var totGross = 0, totLess = 0, totNet = 0, totFine = 0;
+
+        for(var i=0; i<urdBillItems.length; i++) {
+            var item = urdBillItems[i];
+            totGross += item.gross;
+            totLess += item.less;
+            totNet += item.netWt;
+            totFine += item.fine;
+
+            if(item.type === 'silver') { silverVal += item.total; silverWt += item.netWt; }
+            else { goldVal += item.total; goldWt += item.netWt; }
+
+            var itemName = item.name || (item.type === 'silver' ? 'Slv URD' + (i + 1) : 'Gld URD' + (i + 1));
+            list.innerHTML += 
+                '<div class="bill-item">' +
+                    '<span class="urd-col item-col item-name-col" data-index="' + i + '">' + itemName + '</span>' +
+                    '<span class="urd-col">' + item.rate + '</span>' +
+                    '<span class="urd-col">' + item.gross.toFixed(2) + '</span>' +
+                    '<span class="urd-col">' + item.less.toFixed(2) + '</span>' +
+                    '<span class="urd-col">' + item.netWt.toFixed(2) + '</span>' +
+                    '<span class="urd-col">' + item.fine.toFixed(2) + '</span>' +
+                    '<span class="urd-col">' + item.pct + '</span>' +
+                    '<span class="urd-col total-col">' + item.total.toFixed(0) + '</span>' +
+                    '<span class="urd-col action-col">' +
+                        '<span class="urd-edit" data-index="' + i + '">✎</span>' +
+                        '<span class="urd-remove" data-index="' + i + '">✖</span>' +
+                    '</span>' +
+                '</div>';
+        }
+
+        document.getElementById('urdTotalGross').innerText = totGross.toFixed(2);
+        document.getElementById('urdTotalLess').innerText = totLess.toFixed(2);
+        document.getElementById('urdTotalNet').innerText = totNet.toFixed(2);
+        document.getElementById('urdTotalFine').innerText = totFine.toFixed(2);
+
+        document.getElementById('urdGoldWt').innerText = goldWt.toFixed(3);
+        document.getElementById('urdGoldVal').innerText = goldVal.toFixed(2);
+
+        var slvRow = document.getElementById('urdSilverRow');
+        if(silverVal > 0) {
+            slvRow.style.display = 'flex';
+            document.getElementById('urdSilverWt').innerText = silverWt.toFixed(3);
+            document.getElementById('urdSilverVal').innerText = silverVal.toFixed(2);
+        } else { slvRow.style.display = 'none'; }
+
+        urdGrandTotalNum = Math.round(goldVal + silverVal);
+        document.getElementById('urdGrandTotalValue').innerText = urdGrandTotalNum.toString();
+
+        if(!document.getElementById('settlementBox').classList.contains('hide')){ calculateSettlement(); }
+    }
+
+    document.getElementById('addUrdBtn').addEventListener('click', function() {
+        if (currentUrdTotal > 0) {
+            var wt = parseFloat(document.getElementById('urdWt').value || "0");
+            var lessWt = parseFloat(document.getElementById('urdLessWt').value || "0");
+            var pctInput = document.getElementById('urdPct').value;
+            var pct = pctInput === "" ? 100 : parseFloat(pctInput) || 0;
+            var netWt = wt - lessWt;
+            var fineWt = netWt * (pct / 100);
+            var metal = document.getElementById('urdMetalType').value;
+            var rate = parseFloat(document.getElementById('urdRate').value) || 0;
+            
+            var defaultName = metal === 'silver' ? 'Slv URD' + (urdBillItems.length + 1) : 'Gld URD' + (urdBillItems.length + 1);
+
+            urdBillItems.push({ name: defaultName, type: metal, rate: rate, netWt: netWt, gross: wt, less: lessWt, pct: pct, fine: fineWt, total: currentUrdTotal });
+            renderUrdBillPanel();
+            
+            document.getElementById('urdWt').value = "";
+            document.getElementById('urdLessWt').value = "";
+            
+            calculateURD();
+        } else { customAlert("Please enter Old Metal weight before adding."); }
+    });
+
+    document.getElementById('urdItemsList').addEventListener('click', function(e) {
+        if (e.target.classList.contains('urd-remove')) {
+            urdBillItems.splice(parseInt(e.target.getAttribute('data-index')), 1);
+            renderUrdBillPanel();
+        }
+        else if (e.target.classList.contains('urd-edit')) {
+            var index = parseInt(e.target.getAttribute('data-index'));
+            var item = urdBillItems[index];
+
+            updateUrdMetalUI(item.type);
+
+            document.getElementById('urdWt').value = item.gross;
+            document.getElementById('urdLessWt').value = item.less;
+            document.getElementById('urdPct').value = item.pct;
+            document.getElementById('urdRate').value = item.rate;
+
+            urdBillItems.splice(index, 1);
+            renderUrdBillPanel();
+            calculateURD();
+            mainContainer.scrollTop = 0;
+        }
+    });
+
+    document.getElementById('clearUrdBtn').addEventListener('click', function() { 
+        if(urdBillItems.length === 0) return;
+        customConfirm("Clear all items from this URD receipt?", function() {
+            urdBillItems = []; 
+            renderUrdBillPanel(); 
+        });
+    });
+
+    // --- LONG PRESS RENAME LOGIC ---
+    function setupListLongPress(listId, arrayRef, renderFunc) {
+        var listEl = document.getElementById(listId);
+        var holdTimer;
+
+        var startHold = function(e) {
+            var itemSpan = getClosest(e.target, '.item-name-col');
+            if (!itemSpan) return;
+            
+            var index = parseInt(itemSpan.getAttribute('data-index'));
+            
+            holdTimer = setTimeout(function() {
+                customPrompt("Rename Item", arrayRef[index].name || "", function(newVal) {
+                    if (newVal !== null && newVal.trim() !== "") {
+                        arrayRef[index].name = newVal.trim();
+                        renderFunc();
+                    }
+                });
+            }, 500);
+        };
+
+        var cancelHold = function() {
+            clearTimeout(holdTimer);
+        };
+
+        listEl.addEventListener('touchstart', startHold, {passive: true});
+        listEl.addEventListener('touchend', cancelHold);
+        listEl.addEventListener('touchmove', cancelHold);
+        listEl.addEventListener('mousedown', startHold);
+        listEl.addEventListener('mouseup', cancelHold);
+        listEl.addEventListener('mouseleave', cancelHold);
+    }
+
+    // --- HISTORY LOGIC ---
+    var appHistory = JSON.parse(localStorage.getItem('appHistory')) || [];
+
+    function saveCurrentTransaction() {
+        if (billItems.length === 0 && urdBillItems.length === 0) { 
+            customAlert("Nothing to save! Add some items first."); 
+            return; 
+        }
+
+        var now = new Date();
+        var monthsNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var dateStr = now.getDate() + ' ' + monthsNames[now.getMonth()] + ', ' + (now.getHours() < 10 ? '0' : '') + now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+        
+        var record = { 
+            id: new Date().getTime(), 
+            date: dateStr, 
+            billItems: JSON.parse(JSON.stringify(billItems)), 
+            urdBillItems: JSON.parse(JSON.stringify(urdBillItems)), 
+            saleTotal: saleGrandTotalNum,
+            urdTotal: urdGrandTotalNum,
+            
+            savedRates: {
+                rate24: document.getElementById('rate24').value,
+                silverRateSetting: document.getElementById('silverRateSetting').value,
+                urdDiff: document.getElementById('urdDiff').value,
+                pct22: document.getElementById('pct22').value,
+                pct20: document.getElementById('pct20').value,
+                pct18: document.getElementById('pct18').value
+            }
+        };
+
+        appHistory.unshift(record);
+        localStorage.setItem('appHistory', JSON.stringify(appHistory));
+        customAlert('✅ Complete transaction saved to History!');
+        renderHistory();
+    }
+    
+    document.getElementById('saveBillBtn').addEventListener('click', saveCurrentTransaction);
+    document.getElementById('saveUrdBtn').addEventListener('click', saveCurrentTransaction);
+
+    function renderHistory() {
+        var list = document.getElementById('historyList');
+        if (appHistory.length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">No saved bills yet. Click "Save" on a bill to store it here.</div>';
+            return;
+        }
+        
+        var html = '';
+        for(var i=0; i<appHistory.length; i++) {
+            var item = appHistory[i];
+            var desc = [];
+            if(item.billItems.length > 0) desc.push('🧾 Est: ' + item.billItems.length);
+            if(item.urdBillItems.length > 0) desc.push('⚖️ URD: ' + item.urdBillItems.length);
+            
+            var finalAmt = item.saleTotal - item.urdTotal;
+            
+            html += 
+                '<div class="result history-item" data-index="' + i + '" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">' +
+                    '<div>' +
+                        '<div style="font-size:11px; color:#666;">' + item.date + '</div>' +
+                        '<div style="font-weight:bold; font-size:13px; margin-top:4px; color:#9B8AD9;">' + desc.join(' | ') + '</div>' +
+                    '</div>' +
+                    '<div style="text-align:right;">' +
+                        '<div style="font-weight:bold; color:darkred; font-size:15px;">₹' + Math.abs(finalAmt).toFixed(0) + '</div>' +
+                        '<span class="history-delete-btn" data-index="' + i + '" style="color:#E53935; display:inline-block; margin-top:6px; cursor:pointer; font-size:12px; font-weight:bold; padding:4px 8px; background:#FFF; border:1px solid #E53935; border-radius:4px;">Delete</span>' +
+                    '</div>' +
+                '</div>';
+        }
+        list.innerHTML = html;
+    }
+
+    document.getElementById('historyList').addEventListener('click', function(e) {
+        var deleteBtn = getClosest(e.target, '.history-delete-btn');
+        if (deleteBtn) {
+            e.stopPropagation(); 
+            var index = parseInt(deleteBtn.getAttribute('data-index'));
+            customConfirm("Are you sure you want to delete this saved bill?", function() {
+                appHistory.splice(index, 1);
+                localStorage.setItem('appHistory', JSON.stringify(appHistory));
+                renderHistory();
+            });
+            return;
+        }
+
+        var itemBox = getClosest(e.target, '.history-item');
+        if (itemBox) {
+            var index = parseInt(itemBox.getAttribute('data-index'));
+            var record = appHistory[index];
+            
+            if (record.savedRates) {
+                document.getElementById('rate24').value = record.savedRates.rate24;
+                document.getElementById('silverRateSetting').value = record.savedRates.silverRateSetting;
+                document.getElementById('urdDiff').value = record.savedRates.urdDiff;
+                document.getElementById('pct22').value = record.savedRates.pct22;
+                document.getElementById('pct20').value = record.savedRates.pct20;
+                document.getElementById('pct18').value = record.savedRates.pct18;
+                document.getElementById('silverRateInput').value = record.savedRates.silverRateSetting;
+                
+                saveAllRates();
+                updateSaleBoxRates();
+                updateRateBoard();
+                updateUrdRateSystem();
+            }
+
+            billItems = JSON.parse(JSON.stringify(record.billItems || []));
+            urdBillItems = JSON.parse(JSON.stringify(record.urdBillItems || []));
+            
+            renderBillPanel();
+            renderUrdBillPanel();
+            calculateGold();
+            calculateURD();
+            switchPage(navSale, pageSale); 
+        }
+    });
+
+    document.getElementById('clearHistoryBtn').addEventListener('click', function() {
+        if(appHistory.length === 0) return;
+        customConfirm("Delete ALL saved history? This cannot be undone.", function() {
+            appHistory = [];
+            localStorage.removeItem('appHistory');
+            renderHistory();
+        });
+    });
+
+    // --- SHARING LOGIC ---
+    function handleTextShare(shareText, title) {
+        if (navigator.share) { 
+            navigator.share({ title: title, text: shareText }).catch(function() {
+                navigator.clipboard.writeText(shareText);
+                customAlert("Copied to clipboard! You can now paste this directly into WhatsApp.");
+            });
+        } else {
+            navigator.clipboard.writeText(shareText);
+            customAlert("Copied to clipboard! You can now paste this directly into WhatsApp.");
+        }
+    }
+
+    document.getElementById('shareBillBtn').addEventListener('click', function() {
+        if (billItems.length === 0) return;
+        var shareText = "🧾 *Estimate Quotation*\n------------------------\n";
+        for(var i=0; i<billItems.length; i++) {
+            var item = billItems[i];
+            var itemName = item.name || (item.type === 'silver' ? 'Silver ' + (i + 1) : item.type + 'K ' + (i + 1));
+            var taxAmt = (item.taxPct !== undefined && item.taxPct > 0) ? ' | Tax: ' + item.taxPct + '%' : '';
+            shareText += '*' + itemName + '*\nRate: ₹' + item.rate + '/g | Wt: ' + item.weight + 'g | Mk: ' + item.make + ' | St: ₹' + item.stone + taxAmt + '\nTotal: ₹' + item.total.toFixed(0) + '\n------------------------\n';
+        }
+
+        var goldWt = document.getElementById('gtGoldWt').innerText;
+        var slvWt = document.getElementById('gtSilverWt').innerText;
+
+        if (parseFloat(goldWt) > 0) shareText += '\n🥇 *Gold Total Wt: ' + goldWt + 'g*';
+        if (parseFloat(slvWt) > 0) shareText += '\n🥈 *Silver Total Wt: ' + slvWt + 'g*';
+        shareText += '\n💰 *Grand Total: ₹' + saleGrandTotalNum.toString() + '*\n\nThank you for visiting!';
+
+        handleTextShare(shareText, 'Estimate Quotation');
+    });
+
+    document.getElementById('shareUrdBtn').addEventListener('click', function() {
+        if (urdBillItems.length === 0) return;
+        var shareText = "⚖️ *Old Metal (URD) Receipt*\n------------------------\n";
+        for(var i=0; i<urdBillItems.length; i++) {
+            var item = urdBillItems[i];
+            var itemName = item.name || (item.type === 'silver' ? 'Slv Item ' + (i + 1) : 'Gld Item ' + (i + 1));
+            shareText += '*' + itemName + '* | Rate: ₹' + item.rate + '/g\nGWt: ' + item.gross + 'g | LWt: ' + item.less + 'g | Net: ' + item.netWt.toFixed(2) + 'g\nFine: ' + item.fine.toFixed(2) + 'g | Purity: ' + item.pct + '% | Value: ₹' + item.total.toFixed(0) + '\n------------------------\n';
+        }
+
+        shareText += '\n⚖️ *Totals:* GWt: ' + document.getElementById('urdTotalGross').innerText + 'g | LWt: ' + document.getElementById('urdTotalLess').innerText + 'g | Net: ' + document.getElementById('urdTotalNet').innerText + 'g | Fine: ' + document.getElementById('urdTotalFine').innerText + 'g\n';
+
+        var goldWt = document.getElementById('urdGoldWt').innerText;
+        var slvWt = document.getElementById('urdSilverWt').innerText;
+
+        if (parseFloat(goldWt) > 0) shareText += '\n🥇 *Gold Val Wt: ' + goldWt + 'g*';
+        if (parseFloat(slvWt) > 0) shareText += '\n🥈 *Silver Val Wt: ' + slvWt + 'g*';
+        shareText += '\n💰 *URD Total: ₹' + urdGrandTotalNum.toString() + '*\n';
+
+        if (!document.getElementById('settlementBox').classList.contains('hide')) {
+            var finalDiff = Math.round(saleGrandTotalNum - urdGrandTotalNum);
+            shareText += '\n🧾 Estimate Total: ₹' + saleGrandTotalNum.toString();
+            shareText += '\n📉 Less Old Metal: -₹' + urdGrandTotalNum.toString();
+            shareText += '\n\n📌 *Final Settlement: ₹' + Math.abs(finalDiff).toString() + '*';
+            if(finalDiff > 0) shareText += " (Customer Pays)\n";
+            else if (finalDiff < 0) shareText += " (Shop Pays Customer)\n";
+            else shareText += " (Fully Settled)\n";
+        }
+        shareText += "\nThank you for visiting!";
+        handleTextShare(shareText, 'URD Estimate');
+    });
+
+    // --- A5 IMAGE GENERATION ---
+    var currentImageFilename = "Quotation.png";
+
+    window.closeImageModal = function() { document.getElementById('imageModal').classList.remove('show'); }
+
+    function generateA5Image(type) {
+        var a5Paper = document.getElementById('a5-paper');
+        var thead = document.getElementById('a5-table-head');
+        var tbody = document.getElementById('a5-table-body');
+        var totalsArea = document.getElementById('a5-totals-area');
+        var settlementArea = document.getElementById('a5-settlement-area');
+
+        var now = new Date();
+        var monthsNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var dateStr = now.getDate() + ' ' + monthsNames[now.getMonth()] + ' ' + now.getFullYear() + ', ' + (now.getHours() < 10 ? '0' : '') + now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+        document.getElementById('a5-doc-date').innerText = "Date: " + dateStr;
+
+        tbody.innerHTML = ''; totalsArea.innerHTML = ''; settlementArea.innerHTML = '';
+
+        if (type === 'sale') {
+            currentImageFilename = "Estimate_Quotation.png";
+            document.getElementById('a5-doc-title').innerText = "Estimate Quotation";
+            thead.innerHTML = '<th>Item</th><th>Rate</th><th>Wt</th><th>Mk</th><th>St</th><th>Tax</th><th class="right">Total</th>';
+
+            for(var i=0; i<billItems.length; i++) {
+                var item = billItems[i];
+                var name = item.name || (item.type === 'silver' ? 'Silver ' + (i+1) : item.type + 'K ' + (i+1));
+                var a5Tax = (item.taxPct !== undefined && item.taxPct > 0) ? item.taxPct + '%' : '0%';
+                tbody.innerHTML += '<tr><td>' + name + '</td><td>₹' + item.rate + '</td><td>' + item.weight + 'g</td><td>' + item.make + '</td><td>₹' + item.stone + '</td><td>' + a5Tax + '</td><td class="right">₹' + item.total.toFixed(0) + '</td></tr>';
+            }
+
+            totalsArea.innerHTML = '<div class="a5-row"><span>Gold Total (' + document.getElementById('gtGoldWt').innerText + 'g):</span><span>₹' + document.getElementById('gtGoldVal').innerText + '</span></div>';
+            if (parseFloat(document.getElementById('gtSilverWt').innerText) > 0) {
+                totalsArea.innerHTML += '<div class="a5-row" style="color:#607D8B;"><span>Silver Total (' + document.getElementById('gtSilverWt').innerText + 'g):</span><span>₹' + document.getElementById('gtSilverVal').innerText + '</span></div>';
+            }
+            totalsArea.innerHTML += '<div class="a5-row a5-grand"><span>Grand Total:</span><span>₹' + saleGrandTotalNum.toString() + '</span></div>';
+        }
+        else if (type === 'urd') {
+            currentImageFilename = "URD_Receipt.png";
+            document.getElementById('a5-doc-title').innerText = "Old Metal (URD) Receipt";
+            thead.innerHTML = '<th>Item</th><th>Rate</th><th>GWt</th><th>LWt</th><th>Net</th><th>Fine</th><th>%</th><th class="right">Total</th>';
+
+            for(var j=0; j<urdBillItems.length; j++) {
+                var uItem = urdBillItems[j];
+                var uName = uItem.name || (uItem.type === 'silver' ? 'Slv URD ' + (j+1) : 'Gld URD ' + (j+1));
+                tbody.innerHTML += '<tr><td>' + uName + '</td><td>₹' + uItem.rate + '</td><td>' + uItem.gross.toFixed(2) + 'g</td><td>' + uItem.less.toFixed(2) + 'g</td><td>' + uItem.netWt.toFixed(2) + 'g</td><td>' + uItem.fine.toFixed(2) + 'g</td><td>' + uItem.pct + '%</td><td class="right">₹' + uItem.total.toFixed(0) + '</td></tr>';
+            }
+
+            totalsArea.innerHTML = 
+                '<div class="a5-row" style="color:#666; font-size:14px; font-weight:bold; justify-content:space-between; border-bottom:1px solid #ccc; padding-bottom:10px; margin-bottom:10px;">' +
+                    '<span>Gross: ' + document.getElementById('urdTotalGross').innerText + 'g</span>' +
+                    '<span>Less: ' + document.getElementById('urdTotalLess').innerText + 'g</span>' +
+                    '<span>Net: ' + document.getElementById('urdTotalNet').innerText + 'g</span>' +
+                    '<span>Fine: ' + document.getElementById('urdTotalFine').innerText + 'g</span>' +
+                '</div>' +
+                '<div class="a5-row"><span>Gold URD Value (' + document.getElementById('urdGoldWt').innerText + 'g):</span><span>₹' + document.getElementById('urdGoldVal').innerText + '</span></div>';
+            
+            if (parseFloat(document.getElementById('urdSilverWt').innerText) > 0) {
+                totalsArea.innerHTML += '<div class="a5-row" style="color:#607D8B;"><span>Silver URD Value (' + document.getElementById('urdSilverWt').innerText + 'g):</span><span>₹' + document.getElementById('urdSilverVal').innerText + '</span></div>';
+            }
+            totalsArea.innerHTML += '<div class="a5-row a5-grand" style="color:#4CAF50;"><span>URD Total:</span><span>₹' + urdGrandTotalNum.toString() + '</span></div>';
+
+            if (!document.getElementById('settlementBox').classList.contains('hide')) {
+                var finalDiff = Math.round(saleGrandTotalNum - urdGrandTotalNum);
+                var status = finalDiff > 0 ? "(Customer Pays)" : (finalDiff < 0 ? "(Shop Pays)" : "");
+                settlementArea.innerHTML = 
+                    '<div class="a5-settlement">' +
+                        '<div class="a5-row"><span>Estimate Total:</span><span>₹' + saleGrandTotalNum.toString() + '</span></div>' +
+                        '<div class="a5-row" style="color:#E53935;"><span>Less Old Metal:</span><span>-₹' + urdGrandTotalNum.toString() + '</span></div>' +
+                        '<div class="a5-row a5-grand" style="color:#9B8AD9;"><span>Final Amount:</span><span>₹' + Math.abs(finalDiff).toString() + ' ' + status + '</span></div>' +
+                    '</div>';
+            }
+        }
+
+        html2canvas(a5Paper, { scale: 2 }).then(function(canvas) {
+            var imgData = canvas.toDataURL("image/png");
+            document.getElementById('generatedImageResult').src = imgData;
+            document.getElementById('imageModal').classList.add('show');
+        }).catch(function(e) {
+            customAlert("Could not generate image.");
+        });
+    }
+
+    // --- PROFESSIONAL RATE CARD IMAGE GENERATION ---
+    function generateRateCardImage() {
+        var monthsNames = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+        var now = new Date();
+        var dateStr = now.getDate() + ' ' + monthsNames[now.getMonth()] + ' ' + now.getFullYear();
+        
+        var r24 = computeKaratRate(24);
+        var r22 = computeKaratRate(22);
+        var r20 = computeKaratRate(20);
+        var rAg = parseFloat(document.getElementById('silverRateSetting').value) || 0;
+        var rAg10Grams = rAg * 10;
+
+        document.getElementById('rc-date').innerText = dateStr;
+        document.getElementById('rc-r24').innerText = "₹ " + r24.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        document.getElementById('rc-r22').innerText = "₹ " + r22.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        document.getElementById('rc-r20').innerText = "₹ " + r20.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        document.getElementById('rc-rAg').innerText = "₹ " + rAg10Grams.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        currentImageFilename = "Golechha_Jewellers_Rates.png";
+
+        var cardElement = document.getElementById('rate-card');
+        html2canvas(cardElement, { scale: 2, useCORS: true }).then(function(canvas) {
+            var imgData = canvas.toDataURL("image/png");
+            document.getElementById('generatedImageResult').src = imgData;
+            document.getElementById('imageModal').classList.add('show');
+        }).catch(function(e) {
+            customAlert("Could not generate rate card image.");
+        });
+    }
+
+    document.getElementById('imageBillBtn').addEventListener('click', function() { if(billItems.length > 0) generateA5Image('sale'); });
+    document.getElementById('imageUrdBtn').addEventListener('click', function() { if(urdBillItems.length > 0) generateA5Image('urd'); });
+
+    document.getElementById('modalShareActionBtn').addEventListener('click', function() {
+        var imgEl = document.getElementById('generatedImageResult');
+        var dataUrl = imgEl.src;
+
+        if (window.AndroidBridge) { 
+            window.AndroidBridge.shareImage(dataUrl); 
+        } else {
+            try {
+                var isIOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent);
+                if (isIOS) {
+                    window.location.href = dataUrl;
+                } else {
+                    var a = document.createElement('a');
+                    a.href = dataUrl;
+                    a.download = currentImageFilename;
+                    a.click();
+                }
+            } catch (err) {
+                window.location.href = dataUrl;
+            }
+        }
+    });
+
+    // --- SETTLEMENT LOGIC ---
+    function calculateSettlement() {
+        document.getElementById('settlementBox').classList.remove('hide');
+
+        document.getElementById('setSaleTotal').innerText = '₹' + saleGrandTotalNum.toString();
+        document.getElementById('setUrdTotal').innerText = '- ₹' + urdGrandTotalNum.toString();
+
+        var finalDiff = Math.round(saleGrandTotalNum - urdGrandTotalNum);
+        document.getElementById('setFinalAmount').innerText = '₹' + Math.abs(finalDiff).toString();
+
+        var statusEl = document.getElementById('setPayStatus');
+        if(finalDiff > 0) {
+            statusEl.innerText = "(Customer Pays)";
+            statusEl.style.color = "#E53935";
+        } else if (finalDiff < 0) {
+            statusEl.innerText = "(Shop Pays Customer)";
+            statusEl.style.color = "#4CAF50";
+        } else {
+            statusEl.innerText = "(Fully Settled)";
+            statusEl.style.color = "#9B8AD9";
+        }
+    }
+
+    document.getElementById('putSaleBtn').addEventListener('click', calculateSettlement);
+
+    // --- SMART PERCENTAGE CALCULATOR LOGIC ---
+    var scCalculation = localStorage.getItem('smart_calculation') || '';
+    var scStack = [];
+    var scDisplay = document.getElementById('scDisplay');
+    var scPreview = document.getElementById('scPreview');
+
+    var scFormatForDisplay = function(str) {
+        var formatted = str.replace(/\b(\d+)(\.\d+)?\b/g, function(match, p1, p2) {
+            return Number(p1).toLocaleString('en-US') + (p2 || '');
+        });
+        formatted = formatted.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−');
+        formatted = formatted.replace(/([+\−×÷%()])/g, '<span style="color: #24a13b;">$1</span>');
+        return formatted;
+    }
+
+    var scFormatNumberOnly = function(str) {
+        return String(str).replace(/\b(\d+)(\.\d+)?\b/g, function(match, p1, p2) {
+            return Number(p1).toLocaleString('en-US') + (p2 || '');
+        });
+    }
+
+    var scEvaluateExpression = function(expr) {
+        var parsed = expr;
+        parsed = parsed.replace(/(\d)\(/g, '$1*(');
+        parsed = parsed.replace(/\)\(/g, ')*(');
+        parsed = parsed.replace(/\+\s*(\d+(?:\.\d+)?)%/g, '*(1+$1/100)');
+        parsed = parsed.replace(/-\s*(\d+(?:\.\d+)?)%/g, '*(1-$1/100)');
+        parsed = parsed.replace(/\*\s*(\d+(?:\.\d+)?)%/g, '*($1/100)');
+        parsed = parsed.replace(/\/\s*(\d+(?:\.\d+)?)%/g, '/($1/100)');
+        parsed = parsed.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
+        
+        if (!/^[0-9+\-*/(). ]+$/.test(parsed)) return 0;
+        return eval(parsed);
+    }
+
+    var scSaveAndUpdate = function() {
+        scDisplay.innerHTML = scFormatForDisplay(scCalculation) || '';
+        if (scCalculation) {
+            try {
+                var res = scEvaluateExpression(scCalculation);
+                if (res !== undefined && !isNaN(res)) {
+                    var resStr = String(Math.round(res * 100000000) / 100000000); 
+                    if (resStr !== scCalculation) {
+                        scPreview.innerHTML = scFormatNumberOnly(resStr);
+                    } else {
+                        scPreview.innerHTML = '';
+                    }
+                } else {
+                    scPreview.innerHTML = '';
+                }
+            } catch(e) {
+                scPreview.innerHTML = '';
+            }
+        } else {
+            scPreview.innerHTML = '';
+        }
+        localStorage.setItem('smart_calculation', scCalculation);
+    }
+
+    window.scClearCalculator = function() {
+        scCalculation = '';
+        scStack = [];
+        scSaveAndUpdate();
+    }
+
+    window.scHandleBackspace = function() {
+        scCalculation = scCalculation.slice(0, -1);
+        if (scCalculation.charAt(scCalculation.length - 1) === '(' || scCalculation.charAt(scCalculation.length - 1) === ')') {
+            scStack.pop(); 
+        }
+        scSaveAndUpdate();
+    }
+
+    window.scUpdateCalculation = function(char) {
+        scCalculation += char;
+        scSaveAndUpdate();
+    }
+
+    window.scHandleParenthesis = function() {
+        if (scStack.length % 2 === 0) {
+            scCalculation += '(';
+            scStack.push('(');
+        } else {
+            scCalculation += ')';
+            scStack.push(')');
+        }
+        scSaveAndUpdate();
+    }
+
+    window.scHandlePlusMinus = function() {
+        if (scCalculation === '') return;
+        try {
+            var res = scEvaluateExpression(scCalculation);
+            scCalculation = String(res * -1);
+            scSaveAndUpdate();
+        } catch(e) { }
+    }
+
+    window.scHandleEquals = function() {
+        if (scCalculation === '') return;
+        try {
+            var res = scEvaluateExpression(scCalculation);
+            scCalculation = String(Math.round(res * 100000000) / 100000000);
+            scSaveAndUpdate();
+            scStack = []; 
+        } catch (error) {
+            scPreview.innerHTML = 'Error';
+        }
+    }
+
+    // --- SETUP LISTENERS ---
+    window.addEventListener('DOMContentLoaded', function() {
+        loadSettings();
+        scSaveAndUpdate(); 
+
+        updateSaleMetalUI(document.getElementById('metalType').value);
+
+        var settingsInputs = [
+            'rate24', 'urdDiff', 'pct22', 'pct20', 'pct18', 'gstPct', 'silverRateSetting', 'silverRateInput',
+            'defMkVal24', 'defMkVal22', 'defMkVal20', 'defMkVal18', 'defMkValSil'
+        ];
+        
+        for(var si=0; si<settingsInputs.length; si++) {
+            (function(id) {
+                var el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', function(e) {
+                        if (id === 'silverRateInput') document.getElementById('silverRateSetting').value = e.target.value;
+                        if (id === 'silverRateSetting') document.getElementById('silverRateInput').value = e.target.value;
+                        
+                        saveAllRates(); 
+                        
+                        if (id.indexOf('defMk') === 0) {
+                            updateSaleMetalUI(document.getElementById('metalType').value);
+                        } else {
+                            updateSaleBoxRates(); 
+                            calculateGold();
+                        }
+                        
+                        if(id === 'rate24' || id === 'urdDiff' || id === 'silverRateSetting' || id === 'silverRateInput') {
+                            updateUrdRateSystem();
+                        }
+                    });
+                }
+            })(settingsInputs[si]);
+        }
+
+        var mkSetBtns = document.querySelectorAll('.set-mk-btn');
+        for(var mk=0; mk<mkSetBtns.length; mk++) {
+            mkSetBtns[mk].addEventListener('click', function() {
+                var siblings = this.parentNode.querySelectorAll('.set-mk-btn');
+                for(var s=0; s<siblings.length; s++) siblings[s].classList.remove('active');
+                this.classList.add('active');
+                
+                var hiddenInputId = this.parentNode.getAttribute('data-target');
+                document.getElementById(hiddenInputId).value = this.getAttribute('data-val');
+                
+                saveAllRates();
+                updateSaleMetalUI(document.getElementById('metalType').value);
+            });
+        }
+
+        document.getElementById('applyGstCb').addEventListener('change', calculateGold);
+
+        document.getElementById('urdRate').addEventListener('input', function() {
+            if (document.getElementById('urdMetalType').value === 'gold') {
+                localStorage.setItem('lastUrdGoldRate', this.value);
+            }
+            calculateURD();
+        });
+
+        if(document.getElementById('urdMetalType').value === 'gold') {
+            document.getElementById('urdRate').value = localStorage.getItem('lastUrdGoldRate') || calculateDefaultUrdRate();
+        } else {
+            document.getElementById('urdRate').value = document.getElementById('silverRateSetting').value;
+        }
+
+        var makingTypeBtns = document.querySelectorAll('#makingTypeSelector .metal-btn');
+        for(var mt=0; mt<makingTypeBtns.length; mt++) {
+            makingTypeBtns[mt].addEventListener('click', function() {
+                var val = this.getAttribute('data-value');
+                document.getElementById('makingType').value = val;
+                
+                var unitTxt = val === 'percent' ? '(%)' : (val === 'gram' ? '(₹/g)' : '(₹/pc)');
+                document.getElementById('makeLabelText').innerText = 'Temp ' + unitTxt + ':';
+                
+                var parentBtns = this.parentNode.querySelectorAll('.metal-btn');
+                for(var pb=0; pb<parentBtns.length; pb++) parentBtns[pb].classList.remove('active');
+                this.classList.add('active');
+                calculateGold();
+            });
+        }
+
+        document.getElementById('calcButton').addEventListener('click', calculateGold);
+
+        var urdInputs = ['urdWt', 'urdLessWt', 'urdPct'];
+        for(var ui=0; ui<urdInputs.length; ui++) {
+            document.getElementById(urdInputs[ui]).addEventListener('input', calculateURD);
+        }
+        document.getElementById('calcUrdBtn').addEventListener('click', calculateURD);
+
+        var goldInputs = ['goldWeight','makingValue','stoneCharge'];
+        for(var gi=0; gi<goldInputs.length; gi++) {
+            document.getElementById(goldInputs[gi]).addEventListener('input', calculateGold);
+        }
+
+        updateSaleBoxRates(); 
+        calculateGold(); 
+        calculateURD(); 
+        updateRateBoard();
+
+        // LONG PRESS RATE BOARD TO GENERATE PDF-MATCHED IMAGE CARD
+        var holdTimerRates;
+        var rateBoardEl = document.getElementById('rateBoardContent');
+
+        var startHoldRates = function(e) {
+            holdTimerRates = setTimeout(function() {
+                generateRateCardImage();
+            }, 500); 
+        };
+
+        var cancelHoldRates = function() {
+            clearTimeout(holdTimerRates);
+        };
+
+        if (rateBoardEl) {
+            rateBoardEl.addEventListener('touchstart', startHoldRates, {passive: true});
+            rateBoardEl.addEventListener('touchend', cancelHoldRates);
+            rateBoardEl.addEventListener('touchmove', cancelHoldRates);
+            rateBoardEl.addEventListener('mousedown', startHoldRates);
+            rateBoardEl.addEventListener('mouseup', cancelHoldRates);
+            rateBoardEl.addEventListener('mouseleave', cancelHoldRates);
+        }
+
+        // SETUP LONG PRESS EVENTS FOR RENAMING AND GST
+        setupListLongPress('billItemsList', billItems, renderBillPanel);
+        setupListLongPress('urdItemsList', urdBillItems, renderUrdBillPanel);
+
+        var holdTimerGst;
+        var longPressFiredGst = false;
+        var gstLabel = document.getElementById('gstLabelContainer');
+
+        var startHoldGst = function() {
+            longPressFiredGst = false;
+            holdTimerGst = setTimeout(function() {
+                longPressFiredGst = true; 
+                var currentGst = document.getElementById('gstPct').value;
+                
+                customPrompt("Edit GST Percentage (%)", currentGst, function(newVal) {
+                    if (newVal !== null && newVal !== "") {
+                        document.getElementById('gstPct').value = newVal;
+                        saveAllRates();
+                        calculateGold();
+                    }
+                });
+            }, 500); 
+        };
+
+        var cancelHoldGst = function() {
+            clearTimeout(holdTimerGst);
+        };
+
+        gstLabel.addEventListener('touchstart', startHoldGst, {passive: true});
+        gstLabel.addEventListener('touchend', cancelHoldGst);
+        gstLabel.addEventListener('touchmove', cancelHoldGst);
+        gstLabel.addEventListener('mousedown', startHoldGst);
+        gstLabel.addEventListener('mouseup', cancelHoldGst);
+        gstLabel.addEventListener('mouseleave', cancelHoldGst);
+
+        gstLabel.addEventListener('click', function(e) {
+            if (longPressFiredGst) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, true);
+    });
+</script>
+</body>
+</html>
