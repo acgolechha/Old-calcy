@@ -30,6 +30,157 @@
             padding: 0;
         }
 
+        html, body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior-y: contain;
+    font-family: Arial, sans-serif;
+    background: #F6F4FB;
+    color: #2F2F2F;
+    -webkit-user-select: none;
+    user-select: none;
+    margin: 0;
+    padding: 0;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+*, *::before, *::after {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+#appRoot {
+    max-width: 760px;
+    width: 100%;
+    margin: 0 auto;
+    height: 100%;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    padding: 5px;
+    box-sizing: border-box;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+.calculator-container {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+    flex: 1;
+    padding-bottom: 20px;
+    will-change: transform;
+}
+
+.top-nav,
+.calculator,
+.metal-btn,
+.set-mk-btn,
+.result,
+.bill-panel,
+.button-row button,
+.bill-actions button,
+.nav-btn,
+.custom-dialog,
+.side-panel {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+@media (min-width: 768px) {
+    #appRoot {
+        padding: 10px 12px;
+    }
+
+    .calculator {
+        padding: 18px;
+    }
+
+    .input-row > div {
+        margin-right: 12px;
+    }
+
+    .input-row > div:last-child {
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 420px) {
+    .top-nav {
+        margin-bottom: 8px;
+    }
+
+    .nav-btn {
+        font-size: 10px;
+        padding: 7px 0;
+        letter-spacing: 0.02em;
+    }
+
+    .calculator {
+        padding: 12px;
+    }
+
+    .button-row {
+        gap: 8px;
+    }
+
+    .button-row button {
+        margin-right: 0 !important;
+    }
+
+    .bill-actions {
+        gap: 6px;
+    }
+
+    .bill-actions button {
+        margin-right: 0 !important;
+        min-width: 0;
+    }
+
+    .result-value,
+    .final-total-box,
+    .grand-total-amount,
+    .set-row,
+    .set-final {
+        font-size: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        -webkit-animation-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        -webkit-animation-iteration-count: 1 !important;
+        animation-iteration-count: 1 !important;
+        -webkit-transition-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
         #appRoot {
             max-width: 600px;
             margin: 0 auto;
