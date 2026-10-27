@@ -13,16 +13,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* =============================================
-           IOS 9 SAFE STYLES (NO POSITION FIXED ON BODY)
+           iOS 8+ SAFARI SCROLL, FLEX & GRID COMPATIBILITY
            ============================================= */
         html, body {
+            position: fixed;
             width: 100%;
-            min-height: 100%;
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior-y: contain;
             font-family: Arial, sans-serif;
             background: #F6F4FB;
             color: #2F2F2F;
             -webkit-user-select: none;
-            user-select: auto;
+            user-select: none;
             margin: 0;
             padding: 0;
         }
@@ -30,63 +33,94 @@
         #appRoot {
             max-width: 600px;
             margin: 0 auto;
-            min-height: 100vh;
+            height: 100%;
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-flex-direction: column;
             flex-direction: column;
             padding: 5px;
             box-sizing: border-box;
         }
 
         .calculator-container { 
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
-            gap: 20px;
+            -webkit-flex-wrap: wrap;
             flex-wrap: wrap; 
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; 
+            -webkit-box-flex: 1;
+            -webkit-flex: 1;
             flex: 1;
             padding-bottom: 20px;
         }
 
         #ptr-indicator {
-            position: fixed; top: -50px; left: 50%; transform: translateX(-50%);
+            position: fixed; top: -50px; left: 50%;
+            -webkit-transform: translateX(-50%);
+            transform: translateX(-50%);
             background: #FFFFFF; width: 40px; height: 40px; border-radius: 50%;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999;
-            display: flex; align-items: center; justify-content: center; font-size: 20px;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center;
+            font-size: 20px;
+            -webkit-transition: top 0.2s ease-out;
             transition: top 0.2s ease-out; pointer-events: none;
         }
 
         /* TOP NAVIGATION */
         .top-nav {
-            display: flex; background: #FFFFFF; border-radius: 6px;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            background: #FFFFFF; border-radius: 6px;
             border: 1px solid #E8E5F4; padding: 3px; margin-bottom: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04); width: 100%; box-sizing: border-box;
-            gap: 2px; flex-shrink: 0;
+            -webkit-flex-shrink: 0; flex-shrink: 0;
         }
         .nav-btn {
             background: transparent; color: #666666; font-size: 11px;
-            border: none; flex: 1; padding: 8px 1px; cursor: pointer;
-            font-weight: bold; border-radius: 4px; transition: all 0.2s ease; text-align: center;
-            white-space: nowrap;
+            border: none; -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+            padding: 8px 1px; cursor: pointer;
+            font-weight: bold; border-radius: 4px;
+            -webkit-transition: all 0.2s ease; transition: all 0.2s ease;
+            text-align: center; white-space: nowrap;
+            margin-right: 2px;
         }
+        .nav-btn:last-child { margin-right: 0; }
         .nav-btn.active { background: #9B8AD9; color: #FFFFFF; }
         #toggleSettings:active { background: #F6F4FB; }
 
-        .page { display: none; animation: fadeIn 0.3s ease; width: 100%;}
+        .page { display: none; -webkit-animation: fadeIn 0.3s ease; animation: fadeIn 0.3s ease; width: 100%; }
         .page.active { display: block; }
+        @-webkit-keyframes fadeIn { from { opacity: 0; -webkit-transform: translateY(5px); } to { opacity: 1; -webkit-transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* SIDE PANEL */
         .side-panel {
-            position: fixed; top: 0; left: -360px; width: 340px; height: 100%;
+            position: fixed; top: 0; left: -360px; width: 340px; max-width: 90%; height: 100%;
             background: #FFFFFF; box-shadow: 2px 0 15px rgba(0,0,0,0.15);
-            z-index: 2000; transition: 0.3s ease; display: flex; flex-direction: column;
+            z-index: 2000; -webkit-transition: 0.3s ease; transition: 0.3s ease;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column;
         }
         .side-panel.open { left: 0; }
         .side-panel-header {
             padding: 20px; background: #9B8AD9; color: white;
-            display: flex; justify-content: space-between; align-items: center;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
         }
         .side-panel-header h2 { margin: 0; font-size: 18px; }
-        #closeSettings { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
-        .side-panel-content { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+        #closeSettings { background: none; border: none; color: white; font-size: 24px; cursor: pointer; width: auto; padding: 0 5px; }
+        .side-panel-content {
+            padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column;
+            -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+        }
 
         .advanced-menu { margin-top: 15px; padding-top: 10px; border-top: 1px solid #E8E5F4; display: none; }
         .advanced-menu.show { display: block; }
@@ -102,28 +136,73 @@
         .overlay.show { display: block; }
 
         /* UI STYLES */
-        .calculator { flex: 1; background: #FFFFFF; padding: 15px; border-radius: 12px; border: 1px solid #E8E5F4; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+        .calculator {
+            -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+            background: #FFFFFF; padding: 15px; border-radius: 12px;
+            border: 1px solid #E8E5F4; box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+        }
         label { display: block; margin-top: 10px; font-size: 14px; }
 
         input, select {
             width: 100%; padding: 8px; margin-top: 4px; background: #FFFFFF;
             color: #2F2F2F; border: 1px solid #E8E5F4; border-radius: 8px;
-            box-sizing: border-box; -webkit-user-select: auto; user-select: auto; font-size: 16px;
+            box-sizing: border-box; -webkit-user-select: text; user-select: text; font-size: 16px;
         }
-        .input-row { display: flex; gap: 15px; margin-top: 10px; justify-content: space-between; }
-        .input-row > div { flex: 1; }
+        .input-row {
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            margin-top: 10px;
+            -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between;
+        }
+        .input-row > div { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; margin-right: 15px; }
+        .input-row > div:last-child { margin-right: 0; }
         .input-row label { margin-top: 0; }
 
-        .metal-selector { display: flex; gap: 6px; margin-top: 6px; margin-bottom: 4px; }
-        .metal-btn { flex: 1; padding: 8px 0; background: #FBFAFF; border: 1px solid #E8E5F4; border-radius: 8px; text-align: center; font-size: 14px; font-weight: bold; color: #666; transition: 0.2s; line-height: 1.2; }
+        .metal-selector {
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            margin-top: 6px; margin-bottom: 4px;
+        }
+        .metal-btn {
+            -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+            padding: 8px 0; background: #FBFAFF; border: 1px solid #E8E5F4;
+            border-radius: 8px; text-align: center; font-size: 14px; font-weight: bold;
+            color: #666; -webkit-transition: 0.2s; transition: 0.2s; line-height: 1.2;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+            margin-right: 6px;
+        }
+        .metal-btn:last-child { margin-right: 0; }
         .metal-btn.active { background: #9B8AD9; color: #FFF; border-color: #9B8AD9; }
 
-        .set-mk-btn { flex: 1; padding: 6px 0; background: #E8E5F4; color: #666; font-size: 11px; font-weight: bold; text-align: center; cursor: pointer; border-radius: 4px; transition: 0.2s; }
+        .set-mk-row {
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            margin-bottom: 6px;
+        }
+        .set-mk-group {
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+            margin: 0 5px;
+        }
+        .set-mk-btn {
+            -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+            padding: 6px 0; background: #E8E5F4; color: #666; font-size: 11px;
+            font-weight: bold; text-align: center; cursor: pointer; border-radius: 4px;
+            -webkit-transition: 0.2s; transition: 0.2s; margin-right: 2px;
+        }
+        .set-mk-btn:last-child { margin-right: 0; }
         .set-mk-btn.active { background: #9B8AD9; color: #FFF; }
 
         .result { margin-top: 5px; margin-bottom: 12px; padding: 8px; background: #FBFAFF; border: 1px solid #E8E5F4; border-radius: 10px; }
-        .result-row { display: flex; gap: 8px; margin-bottom: 6px; }
-        .result-row > div { flex: 1; background: #FFFFFF; border: 1px solid #E8E5F4; padding: 4px 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .result-row { display: -webkit-box; display: -webkit-flex; display: flex; margin-bottom: 6px; }
+        .result-row > div {
+            -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+            background: #FFFFFF; border: 1px solid #E8E5F4; padding: 4px 8px; border-radius: 6px;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            margin-right: 8px;
+        }
+        .result-row > div:last-child { margin-right: 0; }
         .result-label { color: #666666; font-size: 11px; font-weight: bold; display: block; }
         .result-value { color: #2F2F2F; font-weight: bold; font-size: 14px; }
         .final-total-box { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #B8A9E0; text-align: center; font-size: 17px; font-weight: bold; color: darkred; }
@@ -133,40 +212,48 @@
         .bill-panel.hide { display: none; }
         .bill-header { color: #9B8AD9; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; }
 
-        .bill-table-head, .bill-item { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+        .bill-table-head, .bill-item {
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            font-size: 11px;
+        }
         .bill-table-head { color: #9B8AD9; font-weight: bold; border-bottom: 1px solid #E8E5F4; padding-bottom: 4px; margin-bottom: 4px; }
         .bill-item { color: #666666; margin-bottom: 4px; }
 
-        .bill-col { flex: 1; text-align: center; }
-        .item-col { text-align: left; flex: 1.2; }
-        .item-name-col { cursor: pointer; color: #2F2F2F; font-weight: bold; border-bottom: 1px dashed #9B8AD9; padding-bottom: 1px; touch-action: manipulation; }
-        .total-col { text-align: right; flex: 1.5; font-weight: bold; color:#2F2F2F; }
-        .action-col { flex: 0.8; text-align: right; white-space: nowrap; }
+        .bill-col { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; text-align: center; }
+        .item-col { text-align: left; -webkit-box-flex: 1.2; -webkit-flex: 1.2; flex: 1.2; }
+        .item-name-col { cursor: pointer; color: #2F2F2F; font-weight: bold; border-bottom: 1px dashed #9B8AD9; padding-bottom: 1px; }
+        .total-col { text-align: right; -webkit-box-flex: 1.5; -webkit-flex: 1.5; flex: 1.5; font-weight: bold; color:#2F2F2F; }
+        .action-col { -webkit-box-flex: 0.8; -webkit-flex: 0.8; flex: 0.8; text-align: right; white-space: nowrap; }
 
-        .urd-col { flex: 1; text-align: center; font-size: 9px; padding: 0 1px; }
-        .urd-col.item-col { flex: 1.2; text-align: left; }
-        .urd-col.total-col { flex: 1.5; text-align: right; color:#2F2F2F; font-weight:bold; }
-        .urd-col.action-col { flex: 1.2; text-align: right; white-space: nowrap; }
+        .urd-col { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; text-align: center; font-size: 9px; padding: 0 1px; }
+        .urd-col.item-col { -webkit-box-flex: 1.2; -webkit-flex: 1.2; flex: 1.2; text-align: left; }
+        .urd-col.total-col { -webkit-box-flex: 1.5; -webkit-flex: 1.5; flex: 1.5; text-align: right; color:#2F2F2F; font-weight:bold; }
+        .urd-col.action-col { -webkit-box-flex: 1.2; -webkit-flex: 1.2; flex: 1.2; text-align: right; white-space: nowrap; }
 
         .remove-btn { color: #E53935; font-size: 14px; cursor: pointer; padding: 2px 4px; font-weight:bold; }
         .edit-btn { color: #2196F3; font-size: 14px; cursor: pointer; padding: 2px 4px; font-weight:bold; }
         .urd-remove { color: #E53935; font-size: 12px; cursor: pointer; padding: 2px; font-weight:bold; }
         .urd-edit { color: #2196F3; font-size: 12px; cursor: pointer; padding: 2px; font-weight:bold; }
-        .remove-btn:hover, .edit-btn:hover, .urd-remove:hover, .urd-edit:hover { opacity: 0.7; }
 
         .grand-total-amount { font-size: 13px; font-weight: bold; color: #2F2F2F; margin-top: 5px; padding-top: 5px; border-top: 1px solid #E8E5F4; }
-        .total-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .total-row { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; margin-bottom: 4px; }
         .silver-total-row { color: #607D8B; display: none; }
         .grand-final-row { font-size: 15px; color: darkred; border-top: 1px dashed #B8A9E0; padding-top: 6px; margin-top: 4px; }
 
         .settlement-box { margin-top: 12px; padding: 12px; background: #FFFFFF; border: 2px dashed #9B8AD9; border-radius: 8px; }
-        .set-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
-        .set-final { display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; color: #9B8AD9; border-top: 1px dashed #E8E5F4; padding-top: 6px; margin-top: 4px; }
+        .settlement-box.hide { display: none; }
+        .set-row { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+        .set-final { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; font-size: 16px; font-weight: bold; color: #9B8AD9; border-top: 1px dashed #E8E5F4; padding-top: 6px; margin-top: 4px; }
 
-        .button-row { display: flex; gap: 10px; margin-top: 15px; }
-        .button-row button { margin-top: 0 !important; }
-        .bill-actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; justify-content: space-between; }
-        .bill-actions button { margin-top: 0 !important; padding: 8px !important; font-size: 11px !important; flex: 1; min-width: 60px; }
+        .button-row { display: -webkit-box; display: -webkit-flex; display: flex; margin-top: 15px; }
+        .button-row button { margin-top: 0 !important; margin-right: 10px; -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; }
+        .button-row button:last-child { margin-right: 0; }
+
+        .bill-actions { display: -webkit-box; display: -webkit-flex; display: flex; margin-top: 12px; -webkit-flex-wrap: wrap; flex-wrap: wrap; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; }
+        .bill-actions button { margin-top: 0 !important; padding: 8px !important; font-size: 11px !important; -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; min-width: 55px; margin-right: 6px; }
+        .bill-actions button:last-child { margin-right: 0; }
 
         button { background: #9B8AD9; color: white; font-weight: bold; padding: 10px; width: 100%; border: none; border-radius: 8px; cursor: pointer; }
         .add-btn { background: #4CAF50 !important; }
@@ -176,27 +263,42 @@
         .settle-btn { background: #2196F3 !important; }
 
         select, input, button { -webkit-tap-highlight-color: transparent; outline: none; }
-        select { appearance: listbox; -webkit-appearance: menulist; cursor: pointer; }
+        select { -webkit-appearance: menulist; appearance: listbox; cursor: pointer; }
         select option { background-color: #FFFFFF; color: #2F2F2F; }
 
-        footer { background: transparent; text-align: center; padding: 10px; margin-top: 5px; flex-shrink: 0;}
+        footer { background: transparent; text-align: center; padding: 10px; margin-top: 5px; -webkit-flex-shrink: 0; flex-shrink: 0; }
         .footer-title { color: #9B8AD9; font-size: 14px; font-weight: bold; }
 
-        .img-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; }
-        .img-modal.show { display: flex; animation: fadeIn 0.3s ease; }
-        .img-modal img { max-width: 90%; max-height: 70vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .modal-btn-container { display: flex; gap: 15px; width: 90%; max-width: 400px; margin-top: 20px; }
-        .modal-btn-container button { margin-top: 0 !important; flex: 1; font-size: 14px; padding: 12px; }
+        .img-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 3000;
+            -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column;
+        }
+        .img-modal.show { display: -webkit-box; display: -webkit-flex; display: flex; }
+        .img-modal img { max-width: 90%; max-height: 70%; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .modal-btn-container { display: -webkit-box; display: -webkit-flex; display: flex; width: 90%; max-width: 400px; margin-top: 20px; }
+        .modal-btn-container button { margin-top: 0 !important; -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; font-size: 14px; padding: 12px; margin-right: 15px; }
+        .modal-btn-container button:last-child { margin-right: 0; }
 
-        .custom-dialog-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 5000; justify-content: center; align-items: center; }
-        .custom-dialog-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+        .custom-dialog-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 5000;
+            -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+        }
+        .custom-dialog-overlay.show { display: -webkit-box; display: -webkit-flex; display: flex; }
         .custom-dialog { background: #FFFFFF; padding: 20px; border-radius: 12px; width: 80%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .custom-dialog-text { color: #2F2F2F; font-size: 15px; margin-bottom: 20px; font-weight: bold; line-height: 1.4; }
-        .custom-dialog-btns { display: flex; gap: 10px; }
-        .custom-dialog-btn { flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; transition: 0.2s; }
+        .custom-dialog-btns { display: -webkit-box; display: -webkit-flex; display: flex; }
+        .custom-dialog-btn { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; margin-right: 10px; }
+        .custom-dialog-btn:last-child { margin-right: 0; }
         .btn-cancel { background: #E8E5F4; color: #666; }
         .btn-confirm { background: #E53935; color: #FFF; }
         .btn-ok { background: #9B8AD9; color: #FFF; }
+        .btn-minus { background: #E53935; color: #FFF; }
+        .btn-plus { background: #4CAF50; color: #FFF; }
 
         #a5-template-container { position: absolute; top: -9999px; left: -9999px; }
         .a5-paper { width: 595px; min-height: 842px; background: white; padding: 40px; box-sizing: border-box; font-family: Arial, sans-serif; color: #000; border: 1px solid #ccc; }
@@ -208,12 +310,13 @@
         .a5-table th { color: #9B8AD9; font-weight: bold; border-bottom: 2px solid #eee; }
         .a5-table .right { text-align: right; }
         .a5-totals { border-top: 2px solid #9B8AD9; padding-top: 15px; }
-        .a5-row { display: flex; justify-content: space-between; font-size: 16px; margin-bottom: 10px; }
+        .a5-row { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; font-size: 16px; margin-bottom: 10px; }
         .a5-grand { font-size: 22px; font-weight: bold; color: darkred; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 15px; }
-        .a5-footer { margin-top: 60px; text-align: center; font-size: 14px; color: #888; border-top: 1px solid #eee; padding-top: 20px;}
+        .a5-terms { margin-top: 50px; text-align: left; font-size: 10px; line-height: 1.6; color: #b5b5b5; border-top: 1px solid #eee; padding-top: 12px; }
+        .a5-terms-title { font-weight: bold; margin-bottom: 3px; }
         .a5-settlement { margin-top: 20px; padding: 15px; background: #f9f9f9; border: 2px dashed #9B8AD9; border-radius: 8px; }
 
-        /* SMART PERCENTAGE CALCULATOR */
+        /* SMART PERCENTAGE CALCULATOR (iOS 8 FLEX FALLBACK FOR CSS GRID) */
         .smart-calc-wrapper {
             background-color: #f7f7f9;
             width: 100%;
@@ -226,11 +329,11 @@
         .smart-calc-display-wrapper {
             padding: 10px 5px;
             margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column;
+            -webkit-box-align: end; -webkit-align-items: flex-end; align-items: flex-end;
             min-height: 100px;
-            justify-content: flex-end;
+            -webkit-box-pack: end; -webkit-justify-content: flex-end; justify-content: flex-end;
             border-bottom: 1px solid #e2e2e2;
         }
         .smart-calc-display {
@@ -243,9 +346,9 @@
             font-weight: 300;
         }
         .smart-calc-preview-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
             width: 100%;
             margin-top: 10px;
             min-height: 30px;
@@ -254,7 +357,7 @@
             font-size: 22px;
             color: #777;
             text-align: right;
-            flex-grow: 1;
+            -webkit-box-flex: 1; -webkit-flex-grow: 1; flex-grow: 1;
             margin-right: 15px;
             font-weight: 400;
         }
@@ -269,34 +372,238 @@
             margin: 0;
         }
         .smart-calc-btn-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-wrap: wrap;
+            flex-wrap: wrap;
+            -webkit-box-pack: justify;
+            -webkit-justify-content: space-between;
+            justify-content: space-between;
         }
         .smart-calc-btn {
+            width: 23% !important;
             height: 60px;
             border-radius: 50%;
             border: none;
             font-size: 24px;
             cursor: pointer;
+            -webkit-transition: 0.1s;
             transition: 0.1s;
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
             justify-content: center;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
             align-items: center;
             font-weight: 400;
-            margin: 0 !important;
+            margin: 0 0 8px 0 !important;
             padding: 0 !important;
-            width: 100% !important;
         }
-        .smart-calc-btn:active { transform: scale(0.92); }
+        .smart-calc-btn:active { -webkit-transform: scale(0.92); transform: scale(0.92); }
         .smart-calc-btn.number { background-color: #ffffff; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .smart-calc-btn.operator { background-color: #797979; color: white; font-size: 28px; }
         .smart-calc-btn.top-op { background-color: #e6e6e6; color: #333; }
         .smart-calc-btn.equal { background-color: #24a13b; color: white; font-size: 32px; }
-        .smart-calc-btn.number:hover { background-color: #f0f0f0; }
-        .smart-calc-btn.operator:hover { background-color: #666666; }
-        .smart-calc-btn.top-op:hover { background-color: #d4d4d4; }
-        .smart-calc-btn.equal:hover { background-color: #1e8731; }
+
+        /* RATE BOARD POSTER STYLES (iOS 8 COMPATIBLE - NO CSS VARS OR GRID REQUIRED) */
+        .board {
+            width: 560px;
+            height: 793px;
+            position: relative;
+            overflow: hidden;
+            background: #fdf7e9;
+            background: -webkit-linear-gradient(top, #fdf7e9 0%, #f9efd9 100%);
+            background: linear-gradient(180deg, #fdf7e9 0%, #f9efd9 100%);
+            border: 7px solid #ae7d1e;
+            box-shadow: 0 10px 30px rgba(0,0,0,.15);
+            padding: 12px 20px 0;
+            box-sizing: border-box;
+            font-family: Georgia, "Times New Roman", serif;
+            color: #512510;
+            text-align: left;
+        }
+        .board-inner {
+            height: 100%;
+            border: 1.5px solid #c6a24e;
+            position: relative;
+            padding: 8px 20px 0;
+            box-sizing: border-box;
+        }
+        .board-inner:before, .board-inner:after {
+            content: "";
+            position: absolute;
+            left: 0; right: 0;
+            height: 2px;
+            background: -webkit-linear-gradient(left, transparent, rgba(191,145,47,.5), transparent);
+            background: linear-gradient(90deg, transparent, rgba(191,145,47,.5), transparent);
+        }
+        .board-inner:before { top: 0; }
+        .board-inner:after { bottom: 0; }
+        .board-brand {
+            text-align: center;
+            margin-top: 4px;
+        }
+        .board-brand img {
+            width: 31%;
+            max-width: 210px;
+            height: auto;
+            display: block;
+            margin: 0 auto -6px;
+            mix-blend-mode: multiply;
+        }
+        .board-title {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: .03em;
+            margin: 0;
+        }
+        .board-subtitle {
+            font-size: 18px;
+            letter-spacing: .14em;
+            margin-top: -2px;
+        }
+        .board-tagline {
+            font-style: italic;
+            font-size: 15px;
+            margin-top: 4px;
+        }
+        .board-hero {
+            text-align: center;
+            margin-top: 14px;
+        }
+        .board-hero h1 {
+            font-size: 48px;
+            margin: 0;
+            line-height: 1;
+            letter-spacing: .02em;
+        }
+        .board-ornament {
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center;
+            margin: 12px 8% 16px;
+            color: #bd8520;
+        }
+        .board-ornament .line { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; height: 2px; background: #d4a443; }
+        .board-ornament .mark { font-size: 22px; margin: 0 10px; }
+        .board-date {
+            width: 56%;
+            margin: 0 auto 16px;
+            background: #d39a2d;
+            background: -webkit-linear-gradient(top, #e6b54f, #d39a2d);
+            background: linear-gradient(180deg, #e6b54f, #d39a2d);
+            border-radius: 999px;
+            padding: 8px 16px;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            font-size: 18px;
+            font-weight: 700;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
+        }
+        .board-date .icon { margin-right: 10px; }
+        .board-rates {
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column;
+        }
+        .board-rate-row {
+            border: 2px solid #e1ba60;
+            border-radius: 16px;
+            background: rgba(255,252,243,.62);
+            min-height: 65px;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            padding: 4px 16px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        .board-rate-row:last-child { margin-bottom: 0; }
+        .board-metal {
+            width: 22%;
+            height: 100%;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center;
+        }
+        .board-ingot {
+            font-size: 36px;
+        }
+        .board-rate-name {
+            width: 40%;
+            font-size: 22px;
+            font-weight: 800;
+            text-align: left;
+            padding-left: 4%;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+        .board-value {
+            width: 38%;
+            border-left: 2px solid #e2c370;
+            padding-right: 2%;
+            text-align: right;
+            font-size: 28px;
+            font-weight: 800;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+        .board-value small {
+            display: block;
+            font-size: 11px;
+            margin-top: -1px;
+            letter-spacing: .02em;
+            font-weight: 700;
+            color: #6b5a49;
+        }
+        .board-fine {
+            text-align: center;
+            font-style: italic;
+            font-size: 12px;
+            line-height: 1.35;
+            margin: 16px 7% 12px;
+        }
+        .board-footer {
+            position: absolute;
+            left: -1.5px;
+            right: -1.5px;
+            bottom: -1.5px;
+            height: 65px;
+            background: #6a100a;
+            background: -webkit-linear-gradient(top, #7d170f, #6a100a);
+            background: linear-gradient(180deg, #7d170f, #6a100a);
+            color: white;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .board-fcell {
+            height: 72%;
+            display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+            -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center;
+            padding: 0 4px;
+            border-right: 2px solid rgba(229,170,68,.65);
+            box-sizing: border-box;
+        }
+        .board-fcell-1 { width: 41%; }
+        .board-fcell-2 { width: 28%; }
+        .board-fcell-3 { width: 31%; border-right: 0; }
+        .board-fi { font-size: 1.5em; margin-right: 8px; }
+        .board-ft {
+            font-size: 11px;
+            line-height: 1.15;
+        }
+        .board-ft strong { font-weight: 400; }
+        .board-social { 
+            font-size: 12px; 
+            font-weight: 700; 
+            text-align: center;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -333,91 +640,80 @@
         </table>
         <div class="a5-totals" id="a5-totals-area"></div>
         <div id="a5-settlement-area"></div>
-        <div class="a5-footer">Thank you for your business!</div>
+        <div class="a5-terms">
+            <div class="a5-terms-title">Terms &amp; Conditions</div>
+            <div>1. Quotations are generally valid for a short window.</div>
+            <div>2. Final billing uses the live metal rate on the day of actual payment or delivery, not the rate on the estimate date.</div>
+            <div>3. Subject to changes without prior notice.</div>
+        </div>
     </div>
 </div>
 
-<!-- IOS 9 SAFE RATE CARD TEMPLATE (HIDDEN) -->
+<!-- POSTER-MATCHED SOCIAL RATE CARD TEMPLATE (HIDDEN) -->
 <div id="rate-card-container" style="position: fixed; top: 0; left: 0; opacity: 0; z-index: -9999; pointer-events: none;">
-    <div id="rate-card" style="width: 540px; background: #FDFBF7; border: 4px solid #C5A059; border-radius: 8px; padding: 35px 30px; font-family: 'Times New Roman', Times, serif; box-sizing: border-box; text-align: center; color: #2F2F2F; position: relative;">
-        
-        <!-- Top Branding -->
-        <div style="font-size: 26px; font-weight: bold; color: #2C5E3B; letter-spacing: 1px; font-family: Arial, sans-serif;">GOLECHHA</div>
-        <div style="font-size: 14px; font-weight: bold; color: #2C5E3B; letter-spacing: 4px; margin-top: 2px; font-family: Arial, sans-serif;">JEWELLERS</div>
-        <div style="font-size: 12px; color: #555; margin-top: 4px; font-style: italic;">The Name You Can Trust</div>
-        
-        <!-- Title Banner -->
-        <div style="margin-top: 20px; font-size: 24px; font-weight: bold; color: #2C5E3B; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid #C5A059; display: inline-block; padding-bottom: 4px;">TODAY'S RATES</div>
-        
-        <!-- Date Badge -->
-        <div style="margin-top: 12px;">
-            <span id="rc-date" style="display: inline-block; background: #E6D5B8; border: 1px solid #C5A059; border-radius: 16px; padding: 5px 18px; font-size: 13px; color: #333; font-weight: bold; font-family: Arial, sans-serif;"></span>
-        </div>
-        
-        <!-- Rate Rows Container -->
-        <div style="margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
-            
-            <!-- 24K Row -->
-            <div style="display: flex; align-items: center; background: #FFFDF9; border: 2px solid #E6D5B8; border-radius: 8px; padding: 12px 16px;">
-                <div style="width: 50px; text-align: left;">
-                    <svg width="36" height="24" viewBox="0 0 36 24" fill="#D4AF37"><path d="M2 18L10 22V14L2 10V18Z"/><path d="M12 22L22 18V10L12 14V22Z"/><path d="M20 8L10 4L2 8L12 12L20 8Z"/></svg>
+    <main id="rate-card-board" class="board">
+        <section class="board-inner">
+            <header class="board-brand">
+                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAEnAScDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9MVZS2MninMqsOTUG45yoFTJhhuavnkj1GxhyvGc+hpcFeWl607g8gDFIyI3YcVLTFcaMMSVJ4oKDHSnKpY4p6rgYFNAmMYN1BFIuQc06STZ0HFIIix5NVbQTaEJPOBSqCee1IEwe1KQccUw0FIBH0pMEZ56UgU5zUihWwD0ouBCwP0qUDAApyjA4o69PxoENY7TmlbOM0x+oX1qU4b5RT0AaCc4NA460h4OMZpS3PHFIBO5prLk4oJOM0hc4wKYDscUjLzgCmjcxxng08Lnn1qWAlID93nFFGMDn8qaEx20D1qNg2Pl605iMcdacg/I1SAjI2jpxTlOR60hyTk9DRnAA7VLYWAc9ac2aQEZz79aGPP0ppAX4x/hxSjjAOKYvU0ucgH0pCYjggZHakDEjrxT2yR0pmCenWiwD1J3c0E4PFNAx1z6mlz680AIXycdqUMD0NN2tkkd6cCQM0AJk5IpMknk8Uhyw5pR09sUAI3SlUE802Q/LnFPB4zQAo9e9FMzzRUvVgdEufzqVcbdu059TUcZ3Y96mBI7dK85lCgA9T9BRx2FKuO4/Glx6GmMYoJb3qTHfNAxnrThtI49aYEbcj60gBAzTyBnj0qJpChyVzSAsYzyKUEAc0wOCvXk05T0zSAlXGKU5PQUxTj2qRcgdfzpDGg4696Vjk005JFOByMcUDG856UjZwQeaf2wKY2ccg5rNoBFA/Cn44pAOM+tOXkYpDHAcUnJ/Glx600nB4qWBLjOKaVweaFZs8injBGKhuwhmOOaXGMUjA54oUk5zxTTuBL0FJu4ppzjpSdOKALCnjGKKbnoKTJqo6oT2P/2Q==" alt="Golechha Jewellers logo">
+                <div class="board-title">GOLECHHA</div>
+                <div class="board-subtitle">JEWELLERS</div>
+                <div class="board-tagline">The Name You Can Trust</div>
+            </header>
+
+            <section class="board-hero">
+                <h1>TODAY’S RATES</h1>
+                <div class="board-ornament">
+                    <span class="line"></span><span class="mark">◆</span><span class="line"></span>
                 </div>
-                <div style="flex-grow: 1; text-align: left; font-size: 18px; font-weight: bold; color: #333; font-family: Arial, sans-serif;">GOLD 24K</div>
-                <div style="font-size: 22px; font-weight: bold; color: #2C5E3B; font-family: Arial, sans-serif;" id="rc-r24"></div>
+                <div class="board-date"><span class="icon">📅</span><span id="rc-date">8 SEPTEMBER</span></div>
+            </section>
+
+            <section class="board-rates" aria-label="Today's jewellery rates">
+                <div class="board-rate-row">
+                    <div class="board-metal"><span class="board-ingot">🪙</span></div>
+                    <div class="board-rate-name">GOLD 24K</div>
+                    <div class="board-value" id="rc-r24">₹ 0</div>
+                </div>
+                <div class="board-rate-row">
+                    <div class="board-metal"><span class="board-ingot">🪙</span></div>
+                    <div class="board-rate-name">GOLD 22K</div>
+                    <div class="board-value" id="rc-r22">₹ 0</div>
+                </div>
+                <div class="board-rate-row">
+                    <div class="board-metal"><span class="board-ingot">🪙</span></div>
+                    <div class="board-rate-name">GOLD 20K</div>
+                    <div class="board-value" id="rc-r20">₹ 0</div>
+                </div>
+                <div class="board-rate-row">
+                    <div class="board-metal"><span class="board-ingot">🪙</span></div>
+                    <div class="board-rate-name">SILVER</div>
+                    <div class="board-value" id="rc-rAg">₹ 0<small>(PER 10 GRAMS)</small></div>
+                </div>
+            </section>
+
+            <div class="board-ornament" style="margin-top:22px;margin-bottom:12px;">
+                <span class="line"></span><span class="mark">◆</span><span class="line"></span>
             </div>
 
-            <!-- 22K Row -->
-            <div style="display: flex; align-items: center; background: #FFFDF9; border: 2px solid #E6D5B8; border-radius: 8px; padding: 12px 16px;">
-                <div style="width: 50px; text-align: left;">
-                    <svg width="36" height="24" viewBox="0 0 36 24" fill="#D4AF37"><path d="M2 18L10 22V14L2 10V18Z"/><path d="M12 22L22 18V10L12 14V22Z"/><path d="M20 8L10 4L2 8L12 12L20 8Z"/></svg>
-                </div>
-                <div style="flex-grow: 1; text-align: left; font-size: 18px; font-weight: bold; color: #333; font-family: Arial, sans-serif;">GOLD 22K</div>
-                <div style="font-size: 22px; font-weight: bold; color: #2C5E3B; font-family: Arial, sans-serif;" id="rc-r22"></div>
-            </div>
+            <p class="board-fine">
+                The rates are subject to change at the time of purchase.<br>
+                Making charges and applicable GST are additional.
+            </p>
 
-            <!-- 20K Row -->
-            <div style="display: flex; align-items: center; background: #FFFDF9; border: 2px solid #E6D5B8; border-radius: 8px; padding: 12px 16px;">
-                <div style="width: 50px; text-align: left;">
-                    <svg width="36" height="24" viewBox="0 0 36 24" fill="#D4AF37"><path d="M2 18L10 22V14L2 10V18Z"/><path d="M12 22L22 18V10L12 14V22Z"/><path d="M20 8L10 4L2 8L12 12L20 8Z"/></svg>
+            <footer class="board-footer">
+                <div class="board-fcell board-fcell-1">
+                    <div class="board-fi">⌖</div>
+                    <div class="board-ft">Main Road, Mahavir Marg,<br>Karanja Lad, 444105</div>
                 </div>
-                <div style="flex-grow: 1; text-align: left; font-size: 18px; font-weight: bold; color: #333; font-family: Arial, sans-serif;">GOLD 20K</div>
-                <div style="font-size: 22px; font-weight: bold; color: #2C5E3B; font-family: Arial, sans-serif;" id="rc-r20"></div>
-            </div>
-
-            <!-- Silver Row -->
-            <div style="display: flex; align-items: center; background: #FFFDF9; border: 2px solid #E6D5B8; border-radius: 8px; padding: 12px 16px;">
-                <div style="width: 50px; text-align: left;">
-                    <svg width="36" height="24" viewBox="0 0 36 24" fill="#A9A9A9"><path d="M2 18L10 22V14L2 10V18Z"/><path d="M12 22L22 18V10L12 14V22Z"/><path d="M20 8L10 4L2 8L12 12L20 8Z"/></svg>
+                <div class="board-fcell board-fcell-2">
+                    <div class="board-ft"><strong>Time:</strong><br>11:00 AM to 8:00 PM</div>
                 </div>
-                <div style="flex-grow: 1; text-align: left; font-size: 18px; font-weight: bold; color: #333; font-family: Arial, sans-serif;">SILVER</div>
-                <div style="text-align: right;">
-                    <div style="font-size: 22px; font-weight: bold; color: #333; font-family: Arial, sans-serif;" id="rc-rAg"></div>
-                    <div style="font-size: 10px; color: #666; font-family: Arial, sans-serif; letter-spacing: 0.5px;">(PER 10 GRAMS)</div>
+                <div class="board-fcell board-fcell-3">
+                    <div class="board-ft board-social">@golechhajewellers</div>
                 </div>
-            </div>
-
-        </div>
-        
-        <!-- Disclaimer -->
-        <div style="margin-top: 20px; font-size: 11px; color: #666; font-style: italic; line-height: 1.4;">
-            The rates displayed are indicative and subject to change at the time of purchase.<br>
-            Making charges and applicable GST are additional.
-        </div>
-        
-        <!-- Footer Bar -->
-        <div style="margin-top: 25px; background: #3B1C1C; color: #FFF; border-radius: 6px; padding: 12px 10px; display: flex; justify-content: space-around; align-items: center; font-size: 10px; font-family: Arial, sans-serif;">
-            <div style="max-width: 140px; text-align: left; line-height: 1.3;">
-                📍 Main Road, Mahavir Marg, Karanja Lad, 444105
-            </div>
-            <div style="max-width: 110px; text-align: center; line-height: 1.3;">
-                ⏰ Time:<br>11:00 AM to 8:00 PM
-            </div>
-            <div style="max-width: 120px; text-align: right; line-height: 1.3; font-weight: bold;">
-                📸 @golechhajewellers
-            </div>
-        </div>
-
-    </div>
+            </footer>
+        </section>
+    </main>
 </div>
 
 <nav id="sidePanel" class="side-panel">
@@ -426,22 +722,22 @@
         <button id="closeSettings" type="button">✕</button>
     </div>
     <div class="side-panel-content">
-        <div style="flex-grow: 1;">
+        <div style="-webkit-box-flex: 1; -webkit-flex-grow: 1; flex-grow: 1;">
             <label>💰 24K Rate: <input type="number" id="rate24" value="15300" inputmode="decimal"></label>
             <label>🥈 Silver Rate: <input type="number" id="silverRateSetting" value="260" inputmode="decimal"></label>
 
             <div style="background:#FBFAFF; border:1px solid #E8E5F4; border-radius:8px; padding:10px; margin-top:15px; margin-bottom:5px;">
                 <div style="font-weight:bold; font-size:12px; color:#9B8AD9; margin-bottom:10px;">DEFAULT MAKING CHARGES</div>
                 
-                <div style="display:flex; gap:5px; font-size:10px; color:#666; margin-bottom:4px; font-weight:bold;">
+                <div class="set-mk-row" style="font-size:10px; color:#666; margin-bottom:4px; font-weight:bold;">
                     <div style="width:30px;">Metal</div>
-                    <div style="flex:1;">Type</div>
+                    <div style="-webkit-box-flex:1; -webkit-flex:1; flex:1; margin:0 5px;">Type</div>
                     <div style="width:60px;">Value</div>
                 </div>
 
-                <div style="display:flex; gap:5px; align-items:center; margin-bottom:6px;">
+                <div class="set-mk-row">
                     <div style="width:30px; font-size:13px; font-weight:bold; color:#666;">24K</div>
-                    <div style="display:flex; flex:1; gap:2px;" data-target="defMkType24">
+                    <div class="set-mk-group" data-target="defMkType24">
                         <div class="set-mk-btn active" data-val="percent">%</div>
                         <div class="set-mk-btn" data-val="gram">₹/g</div>
                         <div class="set-mk-btn" data-val="piece">/pc</div>
@@ -450,9 +746,9 @@
                     <input type="number" id="defMkVal24" style="margin:0; width:60px; padding:4px; font-size:13px; text-align:center;" placeholder="Blank" inputmode="decimal">
                 </div>
 
-                <div style="display:flex; gap:5px; align-items:center; margin-bottom:6px;">
+                <div class="set-mk-row">
                     <div style="width:30px; font-size:13px; font-weight:bold; color:#666;">22K</div>
-                    <div style="display:flex; flex:1; gap:2px;" data-target="defMkType22">
+                    <div class="set-mk-group" data-target="defMkType22">
                         <div class="set-mk-btn active" data-val="percent">%</div>
                         <div class="set-mk-btn" data-val="gram">₹/g</div>
                         <div class="set-mk-btn" data-val="piece">/pc</div>
@@ -461,9 +757,9 @@
                     <input type="number" id="defMkVal22" style="margin:0; width:60px; padding:4px; font-size:13px; text-align:center;" placeholder="Blank" inputmode="decimal">
                 </div>
 
-                <div style="display:flex; gap:5px; align-items:center; margin-bottom:6px;">
+                <div class="set-mk-row">
                     <div style="width:30px; font-size:13px; font-weight:bold; color:#666;">20K</div>
-                    <div style="display:flex; flex:1; gap:2px;" data-target="defMkType20">
+                    <div class="set-mk-group" data-target="defMkType20">
                         <div class="set-mk-btn active" data-val="percent">%</div>
                         <div class="set-mk-btn" data-val="gram">₹/g</div>
                         <div class="set-mk-btn" data-val="piece">/pc</div>
@@ -472,9 +768,9 @@
                     <input type="number" id="defMkVal20" style="margin:0; width:60px; padding:4px; font-size:13px; text-align:center;" placeholder="Blank" inputmode="decimal">
                 </div>
 
-                <div style="display:flex; gap:5px; align-items:center; margin-bottom:6px;">
+                <div class="set-mk-row">
                     <div style="width:30px; font-size:13px; font-weight:bold; color:#666;">18K</div>
-                    <div style="display:flex; flex:1; gap:2px;" data-target="defMkType18">
+                    <div class="set-mk-group" data-target="defMkType18">
                         <div class="set-mk-btn active" data-val="percent">%</div>
                         <div class="set-mk-btn" data-val="gram">₹/g</div>
                         <div class="set-mk-btn" data-val="piece">/pc</div>
@@ -483,9 +779,9 @@
                     <input type="number" id="defMkVal18" style="margin:0; width:60px; padding:4px; font-size:13px; text-align:center;" placeholder="Blank" inputmode="decimal">
                 </div>
 
-                <div style="display:flex; gap:5px; align-items:center;">
+                <div class="set-mk-row" style="margin-bottom:0;">
                     <div style="width:30px; font-size:13px; font-weight:bold; color:#666;">Sil</div>
-                    <div style="display:flex; flex:1; gap:2px;" data-target="defMkTypeSil">
+                    <div class="set-mk-group" data-target="defMkTypeSil">
                         <div class="set-mk-btn" data-val="percent">%</div>
                         <div class="set-mk-btn active" data-val="gram">₹/g</div>
                         <div class="set-mk-btn" data-val="piece">/pc</div>
@@ -507,8 +803,8 @@
             <button id="closeSettingsBtn" type="button" style="margin-top:15px;">Done</button>
         </div>
 
-        <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #E8E5F4; font-size: 11px; color: #999; display: flex; justify-content: center; align-items: center; gap: 10px;">
-            <span>v1.0</span>
+        <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #E8E5F4; font-size: 11px; color: #999; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center; -webkit-box-align: center; -webkit-align-items: center; align-items: center;">
+            <span style="margin-right: 10px;">v2.0</span>
             <button id="updateAppBtn" type="button" style="background: #E8E5F4 !important; color: #666 !important; padding: 4px 8px !important; font-size: 10px !important; width: auto !important; border-radius: 4px; margin: 0 !important; border: 1px solid #ccc !important;">Update</button>
         </div>
     </div>
@@ -529,7 +825,7 @@
         <fieldset style="border:none; padding:0; margin:0;">
             <div class="result" id="goldResult"></div>
 
-            <label style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <label style="display:-webkit-box; display:-webkit-flex; display:flex; -webkit-box-pack:justify; -webkit-justify-content:space-between; justify-content:space-between; -webkit-box-align:end; -webkit-align-items:flex-end; align-items:flex-end;">
                 Metal Type
             </label>
             <div class="metal-selector" id="saleMetalSelector">
@@ -551,8 +847,8 @@
                 <div><label>💎 St. ₹: <input type="number" id="stoneCharge" placeholder="" inputmode="decimal"></label></div>
             </div>
 
-            <div class="input-row" style="align-items: flex-end;">
-                <div style="flex: 1.1;">
+            <div class="input-row" style="-webkit-box-align: end; -webkit-align-items: flex-end; align-items: flex-end;">
+                <div style="-webkit-box-flex: 1.1; -webkit-flex: 1.1; flex: 1.1;">
                     <label style="margin-bottom:4px;">MK TY:</label>
                     <div class="metal-selector" id="makingTypeSelector" style="margin: 0;">
                         <div class="metal-btn" data-value="percent" style="padding: 6px 0;">%</div>
@@ -561,21 +857,21 @@
                     </div>
                     <input type="hidden" id="makingType" value="gram">
                 </div>
-                <div style="flex: 0.9; display: flex; gap: 8px;">
-                    <div style="flex: 1;">
+                <div style="-webkit-box-flex: 0.9; -webkit-flex: 0.9; flex: 0.9; display: -webkit-box; display: -webkit-flex; display: flex;">
+                    <div style="-webkit-box-flex: 1; -webkit-flex: 1; flex: 1; margin-right: 8px;">
                         <label style="margin-bottom:4px; font-size:11px; color:#9B8AD9;">Def MK:</label>
-                        <input type="text" id="quickDefMk" placeholder="-" readonly tabindex="-1" style="margin-top:0; padding:8px 4px; text-align:center; background:#E8E5F4; border-color:#ccc; color:#888; pointer-events:none;">
+                        <input type="text" id="quickDefMk" placeholder="-" readonly tabindex="-1" style="margin-top:0; padding:8px 4px; text-align:center; background:#E8E5F4; border-color:#9B8AD9; color:#666; cursor:pointer; font-weight:bold;">
                     </div>
-                    <div style="flex: 1;">
+                    <div style="-webkit-box-flex: 1; -webkit-flex: 1; flex: 1;">
                         <label id="makingLabel" style="margin-bottom:4px;"><span id="makeLabelText">Temp (₹/g):</span></label>
                         <input type="number" id="makingValue" placeholder="-" style="margin-top:0; padding:8px 4px; text-align:center;" inputmode="decimal">
                     </div>
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; margin-top: 10px; margin-bottom: -5px;">
-                <label id="gstLabelContainer" style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: bold; color: #666; cursor: pointer; -webkit-user-select: none; user-select: none;">
-                    <input type="checkbox" id="applyGstCb" checked style="width: 18px; height: 18px; margin: 0;"> Apply GST
+            <div style="display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-pack: end; -webkit-justify-content: flex-end; justify-content: flex-end; margin-top: 10px; margin-bottom: -5px;">
+                <label id="gstLabelContainer" style="display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center; font-size: 14px; font-weight: bold; color: #666; cursor: pointer; -webkit-user-select: none; user-select: none;">
+                    <input type="checkbox" id="applyGstCb" checked style="width: 18px; height: 18px; margin: 0 6px 0 0;"> Apply GST
                 </label>
             </div>
 
@@ -675,8 +971,7 @@
                 <div id="urdItemsList"></div>
 
                 <div class="grand-total-amount">
-                    
-                    <div class="total-row" style="color:#666; font-size:11px; justify-content:space-between; border-bottom:1px solid #E8E5F4; padding-bottom:6px; margin-bottom:6px;">
+                    <div class="total-row" style="color:#666; font-size:11px; border-bottom:1px solid #E8E5F4; padding-bottom:6px; margin-bottom:6px;">
                         <span><b>GWt:</b> <span id="urdTotalGross">0.00</span>g</span>
                         <span><b>LWt:</b> <span id="urdTotalLess">0.00</span>g</span>
                         <span><b>Net:</b> <span id="urdTotalNet">0.00</span>g</span>
@@ -788,15 +1083,109 @@
     </div>
 </footer>
 
+</div>
+
 <script>
-    // --- HELPER FUNCTIONS FOR IOS 9 ---
-    function getClosest(el, selector) {
-        while (el && el !== document) {
-            if (el.matches && el.matches(selector)) return el;
-            if (el.webkitMatchesSelector && el.webkitMatchesSelector(selector)) return el;
-            el = el.parentElement;
+    // =========================================================================
+    // iOS 8 SAFARI POLYFILLS & FORMATTING HELPERS
+    // =========================================================================
+    if (!Element.prototype.matches) {
+        Element.prototype.matches = Element.prototype.webkitMatchesSelector || Element.prototype.msMatchesSelector;
+    }
+    if (!Element.prototype.closest) {
+        Element.prototype.closest = function(s) {
+            var el = this;
+            do {
+                if (el.matches && el.matches(s)) return el;
+                el = el.parentElement || el.parentNode;
+            } while (el !== null && el.nodeType === 1);
+            return null;
+        };
+    }
+    if (window.NodeList && !NodeList.prototype.forEach) {
+        NodeList.prototype.forEach = Array.prototype.forEach;
+    }
+    if (!String.prototype.startsWith) {
+        String.prototype.startsWith = function(search, pos) {
+            pos = !pos || pos < 0 ? 0 : +pos;
+            return this.substring(pos, pos + search.length) === search;
+        };
+    }
+    if (!String.prototype.endsWith) {
+        String.prototype.endsWith = function(search, this_len) {
+            if (this_len === undefined || this_len > this.length) {
+                this_len = this.length;
+            }
+            return this.substring(this_len - search.length, this_len) === search;
+        };
+    }
+    if (typeof Object.assign !== 'function') {
+        Object.assign = function(target) {
+            if (target == null) throw new TypeError('Cannot convert undefined or null to object');
+            var to = Object(target);
+            for (var index = 1; index < arguments.length; index++) {
+                var nextSource = arguments[index];
+                if (nextSource != null) {
+                    for (var nextKey in nextSource) {
+                        if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+                            to[nextKey] = nextSource[nextKey];
+                        }
+                    }
+                }
+            }
+            return to;
+        };
+    }
+    if (!Array.from) {
+        Array.from = function(object) {
+            return [].slice.call(object);
+        };
+    }
+
+    var MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var MONTHS_LONG = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+
+    function formatIndianNumber(num) {
+        var x = Math.round(Number(num) || 0).toString();
+        var lastThree = x.substring(x.length - 3);
+        var otherNumbers = x.substring(0, x.length - 3);
+        if (otherNumbers !== '') lastThree = ',' + lastThree;
+        return otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+    }
+
+    function formatUSCommas(intStr) {
+        return String(intStr).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function formatDateA5(d) {
+        return d.getDate() + ' ' + MONTHS_SHORT[d.getMonth()] + ' ' + d.getFullYear();
+    }
+
+    function formatDatePoster(d) {
+        return d.getDate() + ' ' + MONTHS_LONG[d.getMonth()];
+    }
+
+    function formatDateHistory(d) {
+        var hrs = d.getHours();
+        var mins = d.getMinutes();
+        var ampm = hrs >= 12 ? 'PM' : 'AM';
+        hrs = hrs % 12;
+        hrs = hrs ? hrs : 12;
+        var minStr = mins < 10 ? '0' + mins : mins;
+        return d.getDate() + ' ' + MONTHS_SHORT[d.getMonth()] + ', ' + hrs + ':' + minStr + ' ' + ampm;
+    }
+
+    function dataURLtoBlob(dataurl) {
+        var arr = dataurl.split(',');
+        var mimeMatch = arr[0].match(/:(.*?);/);
+        var mime = mimeMatch ? mimeMatch[1] : 'image/png';
+        var bstr = atob(arr[1]);
+        var n = bstr.length;
+        var u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
         }
-        return null;
+        return new Blob([u8arr], { type: mime });
     }
 
     // --- CUSTOM DIALOG LOGIC ---
@@ -808,7 +1197,7 @@
     
     function customConfirm(msg, onConfirm) {
         document.getElementById('customDialogText').innerText = msg;
-        document.getElementById('customDialogBtns').innerHTML = 
+        document.getElementById('customDialogBtns').innerHTML =
             '<button class="custom-dialog-btn btn-cancel" onclick="closeCustomDialog()">Cancel</button>' +
             '<button class="custom-dialog-btn btn-confirm" id="confirmYesBtn">Confirm</button>';
         document.getElementById('customDialogOverlay').classList.add('show');
@@ -819,17 +1208,17 @@
     }
 
     function customPrompt(title, defaultVal, onConfirm) {
-        document.getElementById('customDialogText').innerHTML = 
+        document.getElementById('customDialogText').innerHTML =
             '<div style="margin-bottom: 15px; color: #9B8AD9;">' + title + '</div>' +
             '<input type="text" id="promptInput" value="' + defaultVal + '" style="width: 80%; padding: 10px; font-size: 18px; text-align: center; border: 2px solid #9B8AD9; border-radius: 8px;" inputmode="text">';
-        document.getElementById('customDialogBtns').innerHTML = 
+        document.getElementById('customDialogBtns').innerHTML =
             '<button class="custom-dialog-btn btn-cancel" onclick="closeCustomDialog()">Cancel</button>' +
             '<button class="custom-dialog-btn btn-confirm" id="confirmPromptBtn" style="background: #9B8AD9;">Save</button>';
         document.getElementById('customDialogOverlay').classList.add('show');
         
         setTimeout(function() {
             var inp = document.getElementById('promptInput');
-            if(inp) { inp.focus(); inp.select(); }
+            if (inp) { inp.focus(); inp.select(); }
         }, 100);
 
         document.getElementById('confirmPromptBtn').onclick = function() {
@@ -854,7 +1243,7 @@
             pStartY = e.touches[0].clientY;
             isPulling = true;
         }
-    }, {passive: true});
+    }, false);
 
     mainContainer.addEventListener('touchmove', function(e) {
         if (!isPulling) return;
@@ -863,9 +1252,10 @@
         
         if (pull > 0 && mainContainer.scrollTop <= 0) {
             ptrIndicator.style.top = Math.min(pull - 40, 20) + 'px';
+            ptrIndicator.style.webkitTransform = 'translateX(-50%) rotate(' + pull + 'deg)';
             ptrIndicator.style.transform = 'translateX(-50%) rotate(' + pull + 'deg)';
         }
-    }, {passive: true});
+    }, false);
 
     mainContainer.addEventListener('touchend', function(e) {
         if (!isPulling) return;
@@ -874,12 +1264,13 @@
         isPulling = false;
         
         ptrIndicator.style.top = '-50px';
+        ptrIndicator.style.webkitTransform = 'translateX(-50%) rotate(0deg)';
         ptrIndicator.style.transform = 'translateX(-50%) rotate(0deg)';
         
         if (pull > 150 && mainContainer.scrollTop <= 0) {
             triggerSoftRefresh();
         }
-    });
+    }, false);
 
     function triggerSoftRefresh() {
         customConfirm("Start a new transaction? This will clear current items without deleting history.", function() {
@@ -924,11 +1315,8 @@
     var pageHistory = document.getElementById('pageHistory');
 
     function switchPage(activeNav, activePage) {
-        var navs = [navSale, navUrd, navCalc, navRates, navHistory];
-        for(var i=0; i<navs.length; i++) navs[i].classList.remove('active');
-        var pages = [pageSale, pageUrd, pageCalc, pageRates, pageHistory];
-        for(var j=0; j<pages.length; j++) pages[j].classList.remove('active');
-        
+        [navSale, navUrd, navCalc, navRates, navHistory].forEach(function(btn) { btn.classList.remove('active'); });
+        [pageSale, pageUrd, pageCalc, pageRates, pageHistory].forEach(function(page) { page.classList.remove('active'); });
         activeNav.classList.add('active');
         activePage.classList.add('active');
         mainContainer.scrollTop = 0; 
@@ -962,23 +1350,41 @@
         if (window.AndroidBridge && window.AndroidBridge.checkForUpdate) {
             window.AndroidBridge.checkForUpdate();
         } else {
-            customAlert("Refreshing app...");
+            customAlert("Updating app... Please wait.");
             setTimeout(function() {
-                window.location.href = window.location.pathname + '?v=' + new Date().getTime();
-            }, 1000);
+                window.location.href = window.location.pathname + '?v=' + Date.now();
+            }, 800);
         }
     });
+
+    // --- MANUAL RATE ADJUSTMENT (+10 / -10 via long-press on metal rate box) ---
+    var rateOffsets = { '24': 0, '22': 0, '20': 0, '18': 0 };
+    try {
+        var storedOffsets = JSON.parse(localStorage.getItem('rateOffsets'));
+        if (storedOffsets && typeof storedOffsets === 'object') {
+            Object.keys(rateOffsets).forEach(function(k) { rateOffsets[k] = parseFloat(storedOffsets[k]) || 0; });
+        }
+    } catch (e) { }
+
+    function saveRateOffsets() {
+        localStorage.setItem('rateOffsets', JSON.stringify(rateOffsets));
+    }
+
+    function resetRateOffsets(karat) {
+        if (karat) { rateOffsets[karat] = 0; }
+        else { Object.keys(rateOffsets).forEach(function(k) { rateOffsets[k] = 0; }); }
+        saveRateOffsets();
+    }
 
     function saveAllRates() {
         var settingsInputs = [
             'rate24', 'urdDiff', 'pct22', 'pct20', 'pct18', 'gstPct', 'silverRateSetting', 
             'defMkType24', 'defMkVal24', 'defMkType22', 'defMkVal22', 'defMkType20', 'defMkVal20', 'defMkType18', 'defMkVal18', 'defMkTypeSil', 'defMkValSil'
         ];
-        for(var i=0; i<settingsInputs.length; i++) {
-            var k = settingsInputs[i];
+        settingsInputs.forEach(function(k) {
             var el = document.getElementById(k);
-            if(el) localStorage.setItem(k, el.value);
-        }
+            if (el) localStorage.setItem(k, el.value);
+        });
         updateRateBoard();
     }
 
@@ -992,25 +1398,22 @@
             'defMkTypeSil': 'gram', 'defMkValSil': ''
         };
 
-        var keys = Object.keys(defaultSettings);
-        for(var i=0; i<keys.length; i++) {
-            var k = keys[i];
+        Object.keys(defaultSettings).forEach(function(k) {
             var el = document.getElementById(k);
-            if(el) {
+            if (el) {
                 var storedVal = localStorage.getItem(k);
                 el.value = (storedVal !== null) ? storedVal : defaultSettings[k];
                 
-                if (k.indexOf('defMkType') === 0) {
+                if (k.startsWith('defMkType')) {
                     var group = document.querySelector('[data-target="' + k + '"]');
-                    if(group) {
-                        var btns = group.querySelectorAll('.set-mk-btn');
-                        for(var b=0; b<btns.length; b++) {
-                            btns[b].classList.toggle('active', btns[b].getAttribute('data-val') === el.value);
-                        }
+                    if (group) {
+                        group.querySelectorAll('.set-mk-btn').forEach(function(b) {
+                            b.classList.toggle('active', b.getAttribute('data-val') === el.value);
+                        });
                     }
                 }
             }
-        }
+        });
 
         if (document.getElementById('silverRateSetting').value) {
             document.getElementById('silverRateInput').value = document.getElementById('silverRateSetting').value;
@@ -1019,15 +1422,16 @@
 
     function computeKaratRate(k) {
         var base = parseFloat(document.getElementById('rate24').value) || 0;
-        if (k === 24) return roundToTen(base);
+        var offset = rateOffsets[String(k)] || 0;
+        if (k === 24) return roundToTen(base) + offset;
         
         var str = String(document.getElementById('pct' + k).value).trim();
         
-        if (str.charAt(str.length - 1) === '.') {
-            return roundToTen(parseFloat(str) || 0);
+        if (str.endsWith('.')) {
+            return roundToTen(parseFloat(str) || 0) + offset;
         } else {
             var pct = parseFloat(str.replace('%', '')) || 0;
-            return roundToTen(base * (pct / 100));
+            return roundToTen(base * (pct / 100)) + offset;
         }
     }
 
@@ -1035,7 +1439,7 @@
         var base = parseFloat(document.getElementById('rate24').value) || 0;
         var diffInput = String(document.getElementById('urdDiff').value).trim();
         
-        if (diffInput.charAt(diffInput.length - 1) === '.') {
+        if (diffInput.endsWith('.')) {
             var flat = parseFloat(diffInput) || 0;
             return Math.round(base - flat);
         } else {
@@ -1045,14 +1449,14 @@
     }
 
     function updateRateBoard() {
-        if(!document.getElementById('rateBoardContent')) return;
+        if (!document.getElementById('rateBoardContent')) return;
         var r24 = computeKaratRate(24);
         var r22 = computeKaratRate(22);
         var r20 = computeKaratRate(20);
         var r18 = computeKaratRate(18);
         var rAg = parseFloat(document.getElementById('silverRateSetting').value) || 0;
 
-        document.getElementById('rateBoardContent').innerHTML = 
+        document.getElementById('rateBoardContent').innerHTML =
             '<div class="result-row" style="margin-bottom:12px;"><div><span class="result-label" style="font-size:12px;">Gold 24K</span><span class="result-value" style="font-size:16px;">₹' + r24 + ' /gm</span></div></div>' +
             '<div class="result-row" style="margin-bottom:12px;"><div><span class="result-label" style="font-size:12px;">Gold 22K</span><span class="result-value" style="font-size:16px;">₹' + r22 + ' /gm</span></div></div>' +
             '<div class="result-row" style="margin-bottom:12px;"><div><span class="result-label" style="font-size:12px;">Gold 20K</span><span class="result-value" style="font-size:16px;">₹' + r20 + ' /gm</span></div></div>' +
@@ -1070,10 +1474,8 @@
         };
 
         var activeVal = document.getElementById('metalType').value;
-        var buttons = document.querySelectorAll('#saleMetalSelector .metal-btn');
 
-        for(var i=0; i<buttons.length; i++) {
-            var btn = buttons[i];
+        document.querySelectorAll('#saleMetalSelector .metal-btn').forEach(function(btn) {
             var val = btn.getAttribute('data-val');
             var label = val === 'silver' ? 'Sil' : val + 'K';
             
@@ -1082,22 +1484,40 @@
             } else {
                 btn.innerHTML = label + '<br><span style="font-size:11px; font-weight:normal; color:#999; display:block; margin-top:2px;">₹' + rates[val] + '</span>';
             }
-        }
+        });
+    }
+
+    function applyDefaultMk() {
+        var val = document.getElementById('metalType').value;
+        var settingTypeMap = { '24': 'defMkType24', '22': 'defMkType22', '20': 'defMkType20', '18': 'defMkType18', 'silver': 'defMkTypeSil' };
+        var settingValMap = { '24': 'defMkVal24', '22': 'defMkVal22', '20': 'defMkVal20', '18': 'defMkVal18', 'silver': 'defMkValSil' };
+
+        var defaultType = document.getElementById(settingTypeMap[val]).value;
+        var defaultVal = document.getElementById(settingValMap[val]).value;
+
+        document.getElementById('makingType').value = defaultType;
+        var unitTxt = defaultType === 'percent' ? '(%)' : (defaultType === 'gram' ? '(₹/g)' : '(₹/pc)');
+        document.getElementById('makeLabelText').innerText = 'Temp ' + unitTxt + ':';
+        document.querySelectorAll('#makingTypeSelector .metal-btn').forEach(function(b) {
+            b.classList.toggle('active', b.getAttribute('data-value') === defaultType);
+        });
+
+        document.getElementById('makingValue').value = defaultVal;
+        calculateGold();
     }
 
     function updateSaleMetalUI(val) {
         document.getElementById('metalType').value = val;
         
-        var btns = document.querySelectorAll('#saleMetalSelector .metal-btn');
-        for(var i=0; i<btns.length; i++) {
-            btns[i].classList.toggle('active', btns[i].getAttribute('data-val') === val);
-        }
+        document.querySelectorAll('#saleMetalSelector .metal-btn').forEach(function(b) {
+            b.classList.toggle('active', b.getAttribute('data-val') === val);
+        });
         
         var box = document.getElementById("silverRateBox");
-        if(val === "silver") {
+        if (val === "silver") {
             box.style.display = "block";
             if (!document.getElementById("silverRateInput").value) {
-                document.getElementById("silverRateInput").value = document.getElementById("silverRateSetting").value;
+                document.getElementById("silverRateInput").value = document.getElementById('silverRateSetting').value;
             }
             document.getElementById('applyGstCb').checked = false;
         } else { 
@@ -1114,11 +1534,9 @@
         document.getElementById('makingType').value = defaultType;
         var unitTxt = defaultType === 'percent' ? '(%)' : (defaultType === 'gram' ? '(₹/g)' : '(₹/pc)');
         document.getElementById('makeLabelText').innerText = 'Temp ' + unitTxt + ':';
-        
-        var mkBtns = document.querySelectorAll('#makingTypeSelector .metal-btn');
-        for(var m=0; m<mkBtns.length; m++) {
-            mkBtns[m].classList.toggle('active', mkBtns[m].getAttribute('data-value') === defaultType);
-        }
+        document.querySelectorAll('#makingTypeSelector .metal-btn').forEach(function(b) {
+            b.classList.toggle('active', b.getAttribute('data-value') === defaultType);
+        });
 
         document.getElementById('quickDefMk').value = defaultVal;
         
@@ -1126,19 +1544,100 @@
         calculateGold();
     }
 
-    var saleMetalBtns = document.querySelectorAll('#saleMetalSelector .metal-btn');
-    for(var sm=0; sm<saleMetalBtns.length; sm++) {
-        saleMetalBtns[sm].addEventListener('click', function() { updateSaleMetalUI(this.getAttribute('data-val')); });
+    document.querySelectorAll('#saleMetalSelector .metal-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { updateSaleMetalUI(this.getAttribute('data-val')); });
+    });
+
+    // --- LONG-PRESS ON METAL RATE BOX => +10 / -10 DIALOG ---
+    function getDisplayedRate(val) {
+        if (val === 'silver') {
+            return parseFloat(document.getElementById('silverRateInput').value) || parseFloat(document.getElementById('silverRateSetting').value) || 0;
+        }
+        return computeKaratRate(parseInt(val, 10));
+    }
+
+    function showRateAdjustDialog(val) {
+        var isSilver = val === 'silver';
+        var label = isSilver ? 'Silver' : val + 'K';
+        var step = isSilver ? 1 : 10;
+
+        function renderDialog() {
+            document.getElementById('customDialogText').innerHTML =
+                '<div style="color:#9B8AD9; margin-bottom:8px;">Adjust ' + label + ' Rate</div>' +
+                '<div style="font-size:26px; color:#2F2F2F;">₹' + getDisplayedRate(val) + '</div>';
+            document.getElementById('customDialogBtns').innerHTML =
+                '<button class="custom-dialog-btn btn-minus" id="rateMinusBtn">− ' + step + '</button>' +
+                '<button class="custom-dialog-btn btn-plus" id="ratePlusBtn">+ ' + step + '</button>' +
+                '<button class="custom-dialog-btn btn-cancel" onclick="closeCustomDialog()">Done</button>';
+            document.getElementById('rateMinusBtn').onclick = function() { adjustRate(-step); };
+            document.getElementById('ratePlusBtn').onclick = function() { adjustRate(step); };
+        }
+
+        function adjustRate(delta) {
+            if (isSilver) {
+                var current = parseFloat(document.getElementById('silverRateSetting').value) || 0;
+                var newVal = Math.max(0, current + delta);
+                document.getElementById('silverRateSetting').value = newVal;
+                document.getElementById('silverRateInput').value = newVal;
+                saveAllRates();
+                updateUrdRateSystem();
+            } else {
+                rateOffsets[val] = (rateOffsets[val] || 0) + delta;
+                saveRateOffsets();
+                updateRateBoard();
+            }
+            updateSaleBoxRates();
+            calculateGold();
+            renderDialog();
+        }
+
+        renderDialog();
+        document.getElementById('customDialogOverlay').classList.add('show');
+    }
+
+    function setupRateLongPress() {
+        var selector = document.getElementById('saleMetalSelector');
+        var holdTimer;
+        var longPressFired = false;
+        var holdVal = null;
+
+        var startHold = function(e) {
+            var btn = e.target.closest('.metal-btn');
+            if (!btn) return;
+            longPressFired = false;
+            holdVal = btn.getAttribute('data-val');
+            holdTimer = setTimeout(function() {
+                longPressFired = true;
+                showRateAdjustDialog(holdVal);
+            }, 500);
+        };
+
+        var cancelHold = function() { clearTimeout(holdTimer); };
+
+        selector.addEventListener('touchstart', startHold, false);
+        selector.addEventListener('touchend', cancelHold, false);
+        selector.addEventListener('touchmove', cancelHold, false);
+        selector.addEventListener('mousedown', startHold, false);
+        selector.addEventListener('mouseup', cancelHold, false);
+        selector.addEventListener('mouseleave', cancelHold, false);
+        selector.addEventListener('contextmenu', function(e) { e.preventDefault(); }, false);
+
+        selector.addEventListener('click', function(e) {
+            if (longPressFired) {
+                e.preventDefault();
+                e.stopPropagation();
+                longPressFired = false;
+            }
+        }, true);
     }
 
     function updateUrdMetalUI(val) {
         document.getElementById('urdMetalType').value = val;
-        var urdBtns = document.querySelectorAll('#urdMetalSelector .metal-btn');
-        for(var u=0; u<urdBtns.length; u++) {
-            urdBtns[u].classList.toggle('active', urdBtns[u].getAttribute('data-val') === val);
-        }
+        document.querySelectorAll('#urdMetalSelector .metal-btn').forEach(function(b) {
+            b.classList.toggle('active', b.getAttribute('data-val') === val);
+        });
         
-        if(val === 'silver') { 
+        if (val === 'silver') { 
             document.getElementById('urdRate').value = document.getElementById('silverRateSetting').value; 
         } else { 
             document.getElementById('urdRate').value = localStorage.getItem('lastUrdGoldRate') || calculateDefaultUrdRate(); 
@@ -1146,10 +1645,9 @@
         calculateURD();
     }
 
-    var urdMetalBtns = document.querySelectorAll('#urdMetalSelector .metal-btn');
-    for(var um=0; um<urdMetalBtns.length; um++) {
-        urdMetalBtns[um].addEventListener('click', function() { updateUrdMetalUI(this.getAttribute('data-val')); });
-    }
+    document.querySelectorAll('#urdMetalSelector .metal-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { updateUrdMetalUI(this.getAttribute('data-val')); });
+    });
 
     // --- PAGE 1: ESTIMATE LOGIC ---
     var currentFinalTotal = 0;
@@ -1160,7 +1658,7 @@
 
     function calculateGold() {
         var type = document.getElementById('metalType').value;
-        var rate = type === "silver" ? (parseFloat(document.getElementById("silverRateInput").value) || 0) : computeKaratRate(parseInt(type));
+        var rate = type === "silver" ? (parseFloat(document.getElementById("silverRateInput").value) || 0) : computeKaratRate(parseInt(type, 10));
         var weight = parseFloat(document.getElementById('goldWeight').value) || 0;
         var makingType = document.getElementById('makingType').value;
         var stone = parseFloat(document.getElementById('stoneCharge').value) || 0;
@@ -1170,6 +1668,7 @@
         var makingVal = tempMk !== "" ? parseFloat(tempMk) : (parseFloat(defMk) || 0);
 
         var applyGst = document.getElementById('applyGstCb').checked;
+        
         var gstPctValue = document.getElementById('gstPct').value || 0; 
         var gst = applyGst ? (parseFloat(gstPctValue) / 100) : 0;
         var displayGstPct = applyGst ? gstPctValue : 0; 
@@ -1182,7 +1681,7 @@
 
         currentFinalTotal = finalTotal;
 
-        document.getElementById("goldResult").innerHTML = 
+        document.getElementById("goldResult").innerHTML =
             '<div class="result-row">' +
                 '<div><span class="result-label">M Value</span><span class="result-value">₹' + goldValue.toFixed(2) + '</span></div>' +
                 '<div><span class="result-label">MK₹</span><span class="result-value">₹' + makingCharge.toFixed(2) + '</span></div>' +
@@ -1209,17 +1708,16 @@
 
         var goldVal = 0, goldWt = 0, silverVal = 0, silverWt = 0;
 
-        for(var i=0; i<billItems.length; i++) {
-            var item = billItems[i];
-            if(item.type === 'silver') { silverVal += item.total; silverWt += item.weight; }
+        billItems.forEach(function(item, index) {
+            if (item.type === 'silver') { silverVal += item.total; silverWt += item.weight; }
             else { goldVal += item.total; goldWt += item.weight; }
 
-            var itemName = item.name || (item.type === 'silver' ? 'Sil ' + (i + 1) : item.type + 'K ' + (i + 1));
+            var itemName = item.name || (item.type === 'silver' ? 'Sil ' + (index + 1) : item.type + 'K ' + (index + 1));
             var taxDisplay = (item.taxPct !== undefined && item.taxPct > 0) ? item.taxPct + '%' : '0%';
             
-            list.innerHTML += 
+            list.innerHTML +=
                 '<div class="bill-item">' +
-                    '<span class="bill-col item-col item-name-col" data-index="' + i + '">' + itemName + '</span>' +
+                    '<span class="bill-col item-col item-name-col" data-index="' + index + '">' + itemName + '</span>' +
                     '<span class="bill-col">' + item.rate + '</span>' +
                     '<span class="bill-col">' + item.weight + '</span>' +
                     '<span class="bill-col">' + item.make + '</span>' +
@@ -1227,17 +1725,17 @@
                     '<span class="bill-col">' + taxDisplay + '</span>' +
                     '<span class="bill-col total-col">' + item.total.toFixed(0) + '</span>' +
                     '<span class="bill-col action-col">' +
-                        '<span class="edit-btn" data-index="' + i + '">✎</span>' +
-                        '<span class="remove-btn" data-index="' + i + '">✖</span>' +
+                        '<span class="edit-btn" data-index="' + index + '">✎</span>' +
+                        '<span class="remove-btn" data-index="' + index + '">✖</span>' +
                     '</span>' +
                 '</div>';
-        }
+        });
 
         document.getElementById('gtGoldWt').innerText = goldWt.toFixed(3);
         document.getElementById('gtGoldVal').innerText = goldVal.toFixed(2);
 
         var slvRow = document.getElementById('gtSilverRow');
-        if(silverVal > 0) {
+        if (silverVal > 0) {
             slvRow.style.display = 'flex';
             document.getElementById('gtSilverWt').innerText = silverWt.toFixed(3);
             document.getElementById('gtSilverVal').innerText = silverVal.toFixed(2);
@@ -1246,13 +1744,13 @@
         saleGrandTotalNum = Math.round(goldVal + silverVal);
         document.getElementById('grandTotalValue').innerText = saleGrandTotalNum.toString();
 
-        if(!document.getElementById('settlementBox').classList.contains('hide')){ calculateSettlement(); }
+        if (!document.getElementById('settlementBox').classList.contains('hide')) { calculateSettlement(); }
     }
 
     document.getElementById('addToBillBtn').addEventListener('click', function() {
         if (currentFinalTotal > 0) {
             var typeVal = document.getElementById('metalType').value;
-            var rateVal = typeVal === "silver" ? (parseFloat(document.getElementById("silverRateInput").value) || 0) : computeKaratRate(parseInt(typeVal));
+            var rateVal = typeVal === "silver" ? (parseFloat(document.getElementById("silverRateInput").value) || 0) : computeKaratRate(parseInt(typeVal, 10));
             
             var tempMk = document.getElementById('makingValue').value;
             var defMk = document.getElementById('quickDefMk').value;
@@ -1294,11 +1792,11 @@
 
     document.getElementById('billItemsList').addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-btn')) {
-            billItems.splice(parseInt(e.target.getAttribute('data-index')), 1);
+            billItems.splice(parseInt(e.target.getAttribute('data-index'), 10), 1);
             renderBillPanel();
         }
         else if (e.target.classList.contains('edit-btn')) {
-            var index = parseInt(e.target.getAttribute('data-index'));
+            var index = parseInt(e.target.getAttribute('data-index'), 10);
             var item = billItems[index];
 
             updateSaleMetalUI(item.type);
@@ -1309,10 +1807,9 @@
             
             document.getElementById('applyGstCb').checked = item.hasGst !== undefined ? item.hasGst : (item.type !== 'silver');
 
-            var mkBtns = document.querySelectorAll('#makingTypeSelector .metal-btn');
-            for(var m=0; m<mkBtns.length; m++) {
-                mkBtns[m].classList.toggle('active', mkBtns[m].getAttribute('data-value') === item.makeType);
-            }
+            document.querySelectorAll('#makingTypeSelector .metal-btn').forEach(function(b) {
+                b.classList.toggle('active', b.getAttribute('data-value') === item.makeType);
+            });
             
             document.getElementById('goldWeight').value = item.weight;
             document.getElementById('makingValue').value = item.make;
@@ -1326,7 +1823,7 @@
     });
 
     document.getElementById('clearBillBtn').addEventListener('click', function() { 
-        if(billItems.length === 0) return;
+        if (billItems.length === 0) return;
         customConfirm("Clear all items from this estimate?", function() {
             billItems = []; 
             renderBillPanel(); 
@@ -1341,7 +1838,7 @@
     function updateUrdRateSystem() {
         localStorage.removeItem('lastUrdGoldRate');
         var currentMetal = document.getElementById('urdMetalType').value;
-        if(currentMetal === 'gold') {
+        if (currentMetal === 'gold') {
             document.getElementById('urdRate').value = calculateDefaultUrdRate();
             calculateURD();
         }
@@ -1361,7 +1858,7 @@
 
         currentUrdTotal = totalVal;
 
-        document.getElementById("urdResult").innerHTML = 
+        document.getElementById("urdResult").innerHTML =
             '<div class="result-row">' +
                 '<div><span class="result-label">Net Wt</span><span class="result-value">' + netWt.toFixed(3) + 'g</span></div>' +
                 '<div><span class="result-label">Fine Wt</span><span class="result-value">' + fineWt.toFixed(3) + 'g</span></div>' +
@@ -1386,20 +1883,19 @@
         var goldVal = 0, goldWt = 0, silverVal = 0, silverWt = 0;
         var totGross = 0, totLess = 0, totNet = 0, totFine = 0;
 
-        for(var i=0; i<urdBillItems.length; i++) {
-            var item = urdBillItems[i];
+        urdBillItems.forEach(function(item, index) {
             totGross += item.gross;
             totLess += item.less;
             totNet += item.netWt;
             totFine += item.fine;
 
-            if(item.type === 'silver') { silverVal += item.total; silverWt += item.netWt; }
+            if (item.type === 'silver') { silverVal += item.total; silverWt += item.netWt; }
             else { goldVal += item.total; goldWt += item.netWt; }
 
-            var itemName = item.name || (item.type === 'silver' ? 'Slv URD' + (i + 1) : 'Gld URD' + (i + 1));
-            list.innerHTML += 
+            var itemName = item.name || (item.type === 'silver' ? 'Slv URD' + (index + 1) : 'Gld URD' + (index + 1));
+            list.innerHTML +=
                 '<div class="bill-item">' +
-                    '<span class="urd-col item-col item-name-col" data-index="' + i + '">' + itemName + '</span>' +
+                    '<span class="urd-col item-col item-name-col" data-index="' + index + '">' + itemName + '</span>' +
                     '<span class="urd-col">' + item.rate + '</span>' +
                     '<span class="urd-col">' + item.gross.toFixed(2) + '</span>' +
                     '<span class="urd-col">' + item.less.toFixed(2) + '</span>' +
@@ -1408,11 +1904,11 @@
                     '<span class="urd-col">' + item.pct + '</span>' +
                     '<span class="urd-col total-col">' + item.total.toFixed(0) + '</span>' +
                     '<span class="urd-col action-col">' +
-                        '<span class="urd-edit" data-index="' + i + '">✎</span>' +
-                        '<span class="urd-remove" data-index="' + i + '">✖</span>' +
+                        '<span class="urd-edit" data-index="' + index + '">✎</span>' +
+                        '<span class="urd-remove" data-index="' + index + '">✖</span>' +
                     '</span>' +
                 '</div>';
-        }
+        });
 
         document.getElementById('urdTotalGross').innerText = totGross.toFixed(2);
         document.getElementById('urdTotalLess').innerText = totLess.toFixed(2);
@@ -1423,7 +1919,7 @@
         document.getElementById('urdGoldVal').innerText = goldVal.toFixed(2);
 
         var slvRow = document.getElementById('urdSilverRow');
-        if(silverVal > 0) {
+        if (silverVal > 0) {
             slvRow.style.display = 'flex';
             document.getElementById('urdSilverWt').innerText = silverWt.toFixed(3);
             document.getElementById('urdSilverVal').innerText = silverVal.toFixed(2);
@@ -1432,7 +1928,7 @@
         urdGrandTotalNum = Math.round(goldVal + silverVal);
         document.getElementById('urdGrandTotalValue').innerText = urdGrandTotalNum.toString();
 
-        if(!document.getElementById('settlementBox').classList.contains('hide')){ calculateSettlement(); }
+        if (!document.getElementById('settlementBox').classList.contains('hide')) { calculateSettlement(); }
     }
 
     document.getElementById('addUrdBtn').addEventListener('click', function() {
@@ -1460,11 +1956,11 @@
 
     document.getElementById('urdItemsList').addEventListener('click', function(e) {
         if (e.target.classList.contains('urd-remove')) {
-            urdBillItems.splice(parseInt(e.target.getAttribute('data-index')), 1);
+            urdBillItems.splice(parseInt(e.target.getAttribute('data-index'), 10), 1);
             renderUrdBillPanel();
         }
         else if (e.target.classList.contains('urd-edit')) {
-            var index = parseInt(e.target.getAttribute('data-index'));
+            var index = parseInt(e.target.getAttribute('data-index'), 10);
             var item = urdBillItems[index];
 
             updateUrdMetalUI(item.type);
@@ -1482,7 +1978,7 @@
     });
 
     document.getElementById('clearUrdBtn').addEventListener('click', function() { 
-        if(urdBillItems.length === 0) return;
+        if (urdBillItems.length === 0) return;
         customConfirm("Clear all items from this URD receipt?", function() {
             urdBillItems = []; 
             renderUrdBillPanel(); 
@@ -1490,20 +1986,21 @@
     });
 
     // --- LONG PRESS RENAME LOGIC ---
-    function setupListLongPress(listId, arrayRef, renderFunc) {
+    function setupListLongPress(listId, getArrayRef, renderFunc) {
         var listEl = document.getElementById(listId);
         var holdTimer;
 
         var startHold = function(e) {
-            var itemSpan = getClosest(e.target, '.item-name-col');
+            var itemSpan = e.target.closest('.item-name-col');
             if (!itemSpan) return;
             
-            var index = parseInt(itemSpan.getAttribute('data-index'));
+            var index = parseInt(itemSpan.getAttribute('data-index'), 10);
+            var arr = getArrayRef();
             
             holdTimer = setTimeout(function() {
-                customPrompt("Rename Item", arrayRef[index].name || "", function(newVal) {
+                customPrompt("Rename Item", arr[index].name || "", function(newVal) {
                     if (newVal !== null && newVal.trim() !== "") {
-                        arrayRef[index].name = newVal.trim();
+                        arr[index].name = newVal.trim();
                         renderFunc();
                     }
                 });
@@ -1514,16 +2011,19 @@
             clearTimeout(holdTimer);
         };
 
-        listEl.addEventListener('touchstart', startHold, {passive: true});
-        listEl.addEventListener('touchend', cancelHold);
-        listEl.addEventListener('touchmove', cancelHold);
-        listEl.addEventListener('mousedown', startHold);
-        listEl.addEventListener('mouseup', cancelHold);
-        listEl.addEventListener('mouseleave', cancelHold);
+        listEl.addEventListener('touchstart', startHold, false);
+        listEl.addEventListener('touchend', cancelHold, false);
+        listEl.addEventListener('touchmove', cancelHold, false);
+        listEl.addEventListener('mousedown', startHold, false);
+        listEl.addEventListener('mouseup', cancelHold, false);
+        listEl.addEventListener('mouseleave', cancelHold, false);
     }
 
     // --- HISTORY LOGIC ---
-    var appHistory = JSON.parse(localStorage.getItem('appHistory')) || [];
+    var appHistory = [];
+    try {
+        appHistory = JSON.parse(localStorage.getItem('appHistory')) || [];
+    } catch (e) { appHistory = []; }
 
     function saveCurrentTransaction() {
         if (billItems.length === 0 && urdBillItems.length === 0) { 
@@ -1531,12 +2031,10 @@
             return; 
         }
 
-        var now = new Date();
-        var monthsNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        var dateStr = now.getDate() + ' ' + monthsNames[now.getMonth()] + ', ' + (now.getHours() < 10 ? '0' : '') + now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+        var dateStr = formatDateHistory(new Date());
         
         var record = { 
-            id: new Date().getTime(), 
+            id: Date.now(), 
             date: dateStr, 
             billItems: JSON.parse(JSON.stringify(billItems)), 
             urdBillItems: JSON.parse(JSON.stringify(urdBillItems)), 
@@ -1549,7 +2047,8 @@
                 urdDiff: document.getElementById('urdDiff').value,
                 pct22: document.getElementById('pct22').value,
                 pct20: document.getElementById('pct20').value,
-                pct18: document.getElementById('pct18').value
+                pct18: document.getElementById('pct18').value,
+                rateOffsets: JSON.parse(JSON.stringify(rateOffsets))
             }
         };
 
@@ -1569,46 +2068,44 @@
             return;
         }
         
-        var html = '';
-        for(var i=0; i<appHistory.length; i++) {
-            var item = appHistory[i];
+        list.innerHTML = appHistory.map(function(item, i) {
             var desc = [];
-            if(item.billItems.length > 0) desc.push('🧾 Est: ' + item.billItems.length);
-            if(item.urdBillItems.length > 0) desc.push('⚖️ URD: ' + item.urdBillItems.length);
+            if (item.billItems && item.billItems.length > 0) desc.push('🧾 Est: ' + item.billItems.length);
+            if (item.urdBillItems && item.urdBillItems.length > 0) desc.push('⚖️ URD: ' + item.urdBillItems.length);
             
-            var finalAmt = item.saleTotal - item.urdTotal;
+            var finalAmt = (item.saleTotal || 0) - (item.urdTotal || 0);
             
-            html += 
-                '<div class="result history-item" data-index="' + i + '" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">' +
-                    '<div>' +
-                        '<div style="font-size:11px; color:#666;">' + item.date + '</div>' +
-                        '<div style="font-weight:bold; font-size:13px; margin-top:4px; color:#9B8AD9;">' + desc.join(' | ') + '</div>' +
+            return '<div class="result history-item" data-index="' + i + '" style="display:-webkit-box; display:-webkit-flex; display:flex; -webkit-box-pack:justify; -webkit-justify-content:space-between; justify-content:space-between; -webkit-box-align:center; -webkit-align-items:center; align-items:center; cursor:pointer;">' +
+                '<div>' +
+                    '<div style="font-size:11px; color:#666;">' + item.date + '</div>' +
+                    '<div style="font-weight:bold; font-size:13px; margin-top:4px; color:#9B8AD9;">' +
+                        desc.join(' | ') +
                     '</div>' +
-                    '<div style="text-align:right;">' +
-                        '<div style="font-weight:bold; color:darkred; font-size:15px;">₹' + Math.abs(finalAmt).toFixed(0) + '</div>' +
-                        '<span class="history-delete-btn" data-index="' + i + '" style="color:#E53935; display:inline-block; margin-top:6px; cursor:pointer; font-size:12px; font-weight:bold; padding:4px 8px; background:#FFF; border:1px solid #E53935; border-radius:4px;">Delete</span>' +
-                    '</div>' +
-                '</div>';
-        }
-        list.innerHTML = html;
+                '</div>' +
+                '<div style="text-align:right;">' +
+                    '<div style="font-weight:bold; color:darkred; font-size:15px;">₹' + Math.abs(finalAmt).toFixed(0) + '</div>' +
+                    '<span class="history-delete-btn" data-index="' + i + '" style="color:#E53935; display:inline-block; margin-top:6px; cursor:pointer; font-size:12px; font-weight:bold; padding:4px 8px; background:#FFF; border:1px solid #E53935; border-radius:4px;">Delete</span>' +
+                '</div>' +
+            '</div>';
+        }).join('');
     }
 
     document.getElementById('historyList').addEventListener('click', function(e) {
-        var deleteBtn = getClosest(e.target, '.history-delete-btn');
+        var deleteBtn = e.target.closest('.history-delete-btn');
         if (deleteBtn) {
             e.stopPropagation(); 
-            var index = parseInt(deleteBtn.getAttribute('data-index'));
+            var delIndex = parseInt(deleteBtn.getAttribute('data-index'), 10);
             customConfirm("Are you sure you want to delete this saved bill?", function() {
-                appHistory.splice(index, 1);
+                appHistory.splice(delIndex, 1);
                 localStorage.setItem('appHistory', JSON.stringify(appHistory));
                 renderHistory();
             });
             return;
         }
 
-        var itemBox = getClosest(e.target, '.history-item');
+        var itemBox = e.target.closest('.history-item');
         if (itemBox) {
-            var index = parseInt(itemBox.getAttribute('data-index'));
+            var index = parseInt(itemBox.getAttribute('data-index'), 10);
             var record = appHistory[index];
             
             if (record.savedRates) {
@@ -1619,6 +2116,10 @@
                 document.getElementById('pct20').value = record.savedRates.pct20;
                 document.getElementById('pct18').value = record.savedRates.pct18;
                 document.getElementById('silverRateInput').value = record.savedRates.silverRateSetting;
+
+                var savedOffsets = record.savedRates.rateOffsets || {};
+                Object.keys(rateOffsets).forEach(function(k) { rateOffsets[k] = parseFloat(savedOffsets[k]) || 0; });
+                saveRateOffsets();
                 
                 saveAllRates();
                 updateSaleBoxRates();
@@ -1638,7 +2139,7 @@
     });
 
     document.getElementById('clearHistoryBtn').addEventListener('click', function() {
-        if(appHistory.length === 0) return;
+        if (appHistory.length === 0) return;
         customConfirm("Delete ALL saved history? This cannot be undone.", function() {
             appHistory = [];
             localStorage.removeItem('appHistory');
@@ -1646,35 +2147,49 @@
         });
     });
 
-    // --- SHARING LOGIC ---
+    // --- SHARING LOGIC (WITH iOS 8 FALLBACK) ---
+    function copyTextFallback(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text);
+        } else {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+        }
+        customAlert("Copied to clipboard! You can now paste this directly into WhatsApp.");
+    }
+
     function handleTextShare(shareText, title) {
-        if (navigator.share) { 
+        if (navigator.share) {
             navigator.share({ title: title, text: shareText }).catch(function() {
-                navigator.clipboard.writeText(shareText);
-                customAlert("Copied to clipboard! You can now paste this directly into WhatsApp.");
+                copyTextFallback(shareText);
             });
         } else {
-            navigator.clipboard.writeText(shareText);
-            customAlert("Copied to clipboard! You can now paste this directly into WhatsApp.");
+            copyTextFallback(shareText);
         }
     }
 
     document.getElementById('shareBillBtn').addEventListener('click', function() {
         if (billItems.length === 0) return;
         var shareText = "🧾 *Estimate Quotation*\n------------------------\n";
-        for(var i=0; i<billItems.length; i++) {
-            var item = billItems[i];
-            var itemName = item.name || (item.type === 'silver' ? 'Silver ' + (i + 1) : item.type + 'K ' + (i + 1));
+        billItems.forEach(function(item, index) {
+            var itemName = item.name || (item.type === 'silver' ? 'Silver ' + (index + 1) : item.type + 'K ' + (index + 1));
             var taxAmt = (item.taxPct !== undefined && item.taxPct > 0) ? ' | Tax: ' + item.taxPct + '%' : '';
             shareText += '*' + itemName + '*\nRate: ₹' + item.rate + '/g | Wt: ' + item.weight + 'g | Mk: ' + item.make + ' | St: ₹' + item.stone + taxAmt + '\nTotal: ₹' + item.total.toFixed(0) + '\n------------------------\n';
-        }
+        });
 
         var goldWt = document.getElementById('gtGoldWt').innerText;
         var slvWt = document.getElementById('gtSilverWt').innerText;
 
         if (parseFloat(goldWt) > 0) shareText += '\n🥇 *Gold Total Wt: ' + goldWt + 'g*';
         if (parseFloat(slvWt) > 0) shareText += '\n🥈 *Silver Total Wt: ' + slvWt + 'g*';
-        shareText += '\n💰 *Grand Total: ₹' + saleGrandTotalNum.toString() + '*\n\nThank you for visiting!';
+        shareText += '\n💰 *Grand Total: ₹' + saleGrandTotalNum.toString() + '*\n\nSubject to changes without prior notice';
 
         handleTextShare(shareText, 'Estimate Quotation');
     });
@@ -1682,11 +2197,10 @@
     document.getElementById('shareUrdBtn').addEventListener('click', function() {
         if (urdBillItems.length === 0) return;
         var shareText = "⚖️ *Old Metal (URD) Receipt*\n------------------------\n";
-        for(var i=0; i<urdBillItems.length; i++) {
-            var item = urdBillItems[i];
-            var itemName = item.name || (item.type === 'silver' ? 'Slv Item ' + (i + 1) : 'Gld Item ' + (i + 1));
+        urdBillItems.forEach(function(item, index) {
+            var itemName = item.name || (item.type === 'silver' ? 'Slv Item ' + (index + 1) : 'Gld Item ' + (index + 1));
             shareText += '*' + itemName + '* | Rate: ₹' + item.rate + '/g\nGWt: ' + item.gross + 'g | LWt: ' + item.less + 'g | Net: ' + item.netWt.toFixed(2) + 'g\nFine: ' + item.fine.toFixed(2) + 'g | Purity: ' + item.pct + '% | Value: ₹' + item.total.toFixed(0) + '\n------------------------\n';
-        }
+        });
 
         shareText += '\n⚖️ *Totals:* GWt: ' + document.getElementById('urdTotalGross').innerText + 'g | LWt: ' + document.getElementById('urdTotalLess').innerText + 'g | Net: ' + document.getElementById('urdTotalNet').innerText + 'g | Fine: ' + document.getElementById('urdTotalFine').innerText + 'g\n';
 
@@ -1702,7 +2216,7 @@
             shareText += '\n🧾 Estimate Total: ₹' + saleGrandTotalNum.toString();
             shareText += '\n📉 Less Old Metal: -₹' + urdGrandTotalNum.toString();
             shareText += '\n\n📌 *Final Settlement: ₹' + Math.abs(finalDiff).toString() + '*';
-            if(finalDiff > 0) shareText += " (Customer Pays)\n";
+            if (finalDiff > 0) shareText += " (Customer Pays)\n";
             else if (finalDiff < 0) shareText += " (Shop Pays Customer)\n";
             else shareText += " (Fully Settled)\n";
         }
@@ -1713,7 +2227,7 @@
     // --- A5 IMAGE GENERATION ---
     var currentImageFilename = "Quotation.png";
 
-    window.closeImageModal = function() { document.getElementById('imageModal').classList.remove('show'); }
+    window.closeImageModal = function() { document.getElementById('imageModal').classList.remove('show'); };
 
     function generateA5Image(type) {
         var a5Paper = document.getElementById('a5-paper');
@@ -1722,9 +2236,7 @@
         var totalsArea = document.getElementById('a5-totals-area');
         var settlementArea = document.getElementById('a5-settlement-area');
 
-        var now = new Date();
-        var monthsNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        var dateStr = now.getDate() + ' ' + monthsNames[now.getMonth()] + ' ' + now.getFullYear() + ', ' + (now.getHours() < 10 ? '0' : '') + now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+        var dateStr = formatDateA5(new Date());
         document.getElementById('a5-doc-date').innerText = "Date: " + dateStr;
 
         tbody.innerHTML = ''; totalsArea.innerHTML = ''; settlementArea.innerHTML = '';
@@ -1734,14 +2246,14 @@
             document.getElementById('a5-doc-title').innerText = "Estimate Quotation";
             thead.innerHTML = '<th>Item</th><th>Rate</th><th>Wt</th><th>Mk</th><th>St</th><th>Tax</th><th class="right">Total</th>';
 
-            for(var i=0; i<billItems.length; i++) {
-                var item = billItems[i];
-                var name = item.name || (item.type === 'silver' ? 'Silver ' + (i+1) : item.type + 'K ' + (i+1));
+            billItems.forEach(function(item, index) {
+                var name = item.name || (item.type === 'silver' ? 'Silver ' + (index + 1) : item.type + 'K ' + (index + 1));
                 var a5Tax = (item.taxPct !== undefined && item.taxPct > 0) ? item.taxPct + '%' : '0%';
                 tbody.innerHTML += '<tr><td>' + name + '</td><td>₹' + item.rate + '</td><td>' + item.weight + 'g</td><td>' + item.make + '</td><td>₹' + item.stone + '</td><td>' + a5Tax + '</td><td class="right">₹' + item.total.toFixed(0) + '</td></tr>';
-            }
+            });
 
-            totalsArea.innerHTML = '<div class="a5-row"><span>Gold Total (' + document.getElementById('gtGoldWt').innerText + 'g):</span><span>₹' + document.getElementById('gtGoldVal').innerText + '</span></div>';
+            totalsArea.innerHTML =
+                '<div class="a5-row"><span>Gold Total (' + document.getElementById('gtGoldWt').innerText + 'g):</span><span>₹' + document.getElementById('gtGoldVal').innerText + '</span></div>';
             if (parseFloat(document.getElementById('gtSilverWt').innerText) > 0) {
                 totalsArea.innerHTML += '<div class="a5-row" style="color:#607D8B;"><span>Silver Total (' + document.getElementById('gtSilverWt').innerText + 'g):</span><span>₹' + document.getElementById('gtSilverVal').innerText + '</span></div>';
             }
@@ -1752,21 +2264,19 @@
             document.getElementById('a5-doc-title').innerText = "Old Metal (URD) Receipt";
             thead.innerHTML = '<th>Item</th><th>Rate</th><th>GWt</th><th>LWt</th><th>Net</th><th>Fine</th><th>%</th><th class="right">Total</th>';
 
-            for(var j=0; j<urdBillItems.length; j++) {
-                var uItem = urdBillItems[j];
-                var uName = uItem.name || (uItem.type === 'silver' ? 'Slv URD ' + (j+1) : 'Gld URD ' + (j+1));
-                tbody.innerHTML += '<tr><td>' + uName + '</td><td>₹' + uItem.rate + '</td><td>' + uItem.gross.toFixed(2) + 'g</td><td>' + uItem.less.toFixed(2) + 'g</td><td>' + uItem.netWt.toFixed(2) + 'g</td><td>' + uItem.fine.toFixed(2) + 'g</td><td>' + uItem.pct + '%</td><td class="right">₹' + uItem.total.toFixed(0) + '</td></tr>';
-            }
+            urdBillItems.forEach(function(item, index) {
+                var name = item.name || (item.type === 'silver' ? 'Slv URD ' + (index + 1) : 'Gld URD ' + (index + 1));
+                tbody.innerHTML += '<tr><td>' + name + '</td><td>₹' + item.rate + '</td><td>' + item.gross.toFixed(2) + 'g</td><td>' + item.less.toFixed(2) + 'g</td><td>' + item.netWt.toFixed(2) + 'g</td><td>' + item.fine.toFixed(2) + 'g</td><td>' + item.pct + '%</td><td class="right">₹' + item.total.toFixed(0) + '</td></tr>';
+            });
 
-            totalsArea.innerHTML = 
-                '<div class="a5-row" style="color:#666; font-size:14px; font-weight:bold; justify-content:space-between; border-bottom:1px solid #ccc; padding-bottom:10px; margin-bottom:10px;">' +
+            totalsArea.innerHTML =
+                '<div class="a5-row" style="color:#666; font-size:14px; font-weight:bold; border-bottom:1px solid #ccc; padding-bottom:10px; margin-bottom:10px;">' +
                     '<span>Gross: ' + document.getElementById('urdTotalGross').innerText + 'g</span>' +
                     '<span>Less: ' + document.getElementById('urdTotalLess').innerText + 'g</span>' +
                     '<span>Net: ' + document.getElementById('urdTotalNet').innerText + 'g</span>' +
                     '<span>Fine: ' + document.getElementById('urdTotalFine').innerText + 'g</span>' +
                 '</div>' +
                 '<div class="a5-row"><span>Gold URD Value (' + document.getElementById('urdGoldWt').innerText + 'g):</span><span>₹' + document.getElementById('urdGoldVal').innerText + '</span></div>';
-            
             if (parseFloat(document.getElementById('urdSilverWt').innerText) > 0) {
                 totalsArea.innerHTML += '<div class="a5-row" style="color:#607D8B;"><span>Silver URD Value (' + document.getElementById('urdSilverWt').innerText + 'g):</span><span>₹' + document.getElementById('urdSilverVal').innerText + '</span></div>';
             }
@@ -1775,7 +2285,7 @@
             if (!document.getElementById('settlementBox').classList.contains('hide')) {
                 var finalDiff = Math.round(saleGrandTotalNum - urdGrandTotalNum);
                 var status = finalDiff > 0 ? "(Customer Pays)" : (finalDiff < 0 ? "(Shop Pays)" : "");
-                settlementArea.innerHTML = 
+                settlementArea.innerHTML =
                     '<div class="a5-settlement">' +
                         '<div class="a5-row"><span>Estimate Total:</span><span>₹' + saleGrandTotalNum.toString() + '</span></div>' +
                         '<div class="a5-row" style="color:#E53935;"><span>Less Old Metal:</span><span>-₹' + urdGrandTotalNum.toString() + '</span></div>' +
@@ -1788,43 +2298,42 @@
             var imgData = canvas.toDataURL("image/png");
             document.getElementById('generatedImageResult').src = imgData;
             document.getElementById('imageModal').classList.add('show');
-        }).catch(function(e) {
+        }).catch(function() {
             customAlert("Could not generate image.");
         });
     }
 
     // --- PROFESSIONAL RATE CARD IMAGE GENERATION ---
     function generateRateCardImage() {
-        var monthsNames = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
-        var now = new Date();
-        var dateStr = now.getDate() + ' ' + monthsNames[now.getMonth()] + ' ' + now.getFullYear();
+        var dateStr = formatDatePoster(new Date());
         
         var r24 = computeKaratRate(24);
         var r22 = computeKaratRate(22);
         var r20 = computeKaratRate(20);
         var rAg = parseFloat(document.getElementById('silverRateSetting').value) || 0;
+        
         var rAg10Grams = rAg * 10;
 
         document.getElementById('rc-date').innerText = dateStr;
-        document.getElementById('rc-r24').innerText = "₹ " + r24.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        document.getElementById('rc-r22').innerText = "₹ " + r22.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        document.getElementById('rc-r20').innerText = "₹ " + r20.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        document.getElementById('rc-rAg').innerText = "₹ " + rAg10Grams.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        document.getElementById('rc-r24').innerText = "₹ " + formatIndianNumber(r24);
+        document.getElementById('rc-r22').innerText = "₹ " + formatIndianNumber(r22);
+        document.getElementById('rc-r20').innerText = "₹ " + formatIndianNumber(r20);
+        document.getElementById('rc-rAg').innerHTML = "₹ " + formatIndianNumber(rAg10Grams) + "<small>(PER 10 GRAMS)</small>";
 
         currentImageFilename = "Golechha_Jewellers_Rates.png";
 
-        var cardElement = document.getElementById('rate-card');
+        var cardElement = document.getElementById('rate-card-board');
         html2canvas(cardElement, { scale: 2, useCORS: true }).then(function(canvas) {
             var imgData = canvas.toDataURL("image/png");
             document.getElementById('generatedImageResult').src = imgData;
             document.getElementById('imageModal').classList.add('show');
-        }).catch(function(e) {
+        }).catch(function() {
             customAlert("Could not generate rate card image.");
         });
     }
 
-    document.getElementById('imageBillBtn').addEventListener('click', function() { if(billItems.length > 0) generateA5Image('sale'); });
-    document.getElementById('imageUrdBtn').addEventListener('click', function() { if(urdBillItems.length > 0) generateA5Image('urd'); });
+    document.getElementById('imageBillBtn').addEventListener('click', function() { if (billItems.length > 0) generateA5Image('sale'); });
+    document.getElementById('imageUrdBtn').addEventListener('click', function() { if (urdBillItems.length > 0) generateA5Image('urd'); });
 
     document.getElementById('modalShareActionBtn').addEventListener('click', function() {
         var imgEl = document.getElementById('generatedImageResult');
@@ -1834,17 +2343,23 @@
             window.AndroidBridge.shareImage(dataUrl); 
         } else {
             try {
-                var isIOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent);
-                if (isIOS) {
-                    window.location.href = dataUrl;
-                } else {
-                    var a = document.createElement('a');
-                    a.href = dataUrl;
-                    a.download = currentImageFilename;
-                    a.click();
+                var blob = dataURLtoBlob(dataUrl);
+                if (typeof File === 'function' && navigator.canShare) {
+                    var file = new File([blob], currentImageFilename, { type: blob.type });
+                    if (navigator.canShare({ files: [file] })) {
+                        navigator.share({ title: 'Quotation', files: [file] });
+                        return;
+                    }
                 }
+                var a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = currentImageFilename;
+                a.click();
             } catch (err) {
-                window.location.href = dataUrl;
+                var aFallback = document.createElement('a');
+                aFallback.href = dataUrl;
+                aFallback.download = currentImageFilename;
+                aFallback.click();
             }
         }
     });
@@ -1860,7 +2375,7 @@
         document.getElementById('setFinalAmount').innerText = '₹' + Math.abs(finalDiff).toString();
 
         var statusEl = document.getElementById('setPayStatus');
-        if(finalDiff > 0) {
+        if (finalDiff > 0) {
             statusEl.innerText = "(Customer Pays)";
             statusEl.style.color = "#E53935";
         } else if (finalDiff < 0) {
@@ -1882,18 +2397,18 @@
 
     var scFormatForDisplay = function(str) {
         var formatted = str.replace(/\b(\d+)(\.\d+)?\b/g, function(match, p1, p2) {
-            return Number(p1).toLocaleString('en-US') + (p2 || '');
+            return formatUSCommas(p1) + (p2 || '');
         });
         formatted = formatted.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−');
         formatted = formatted.replace(/([+\−×÷%()])/g, '<span style="color: #24a13b;">$1</span>');
         return formatted;
-    }
+    };
 
     var scFormatNumberOnly = function(str) {
         return String(str).replace(/\b(\d+)(\.\d+)?\b/g, function(match, p1, p2) {
-            return Number(p1).toLocaleString('en-US') + (p2 || '');
+            return formatUSCommas(p1) + (p2 || '');
         });
-    }
+    };
 
     var scEvaluateExpression = function(expr) {
         var parsed = expr;
@@ -1907,7 +2422,7 @@
         
         if (!/^[0-9+\-*/(). ]+$/.test(parsed)) return 0;
         return eval(parsed);
-    }
+    };
 
     var scSaveAndUpdate = function() {
         scDisplay.innerHTML = scFormatForDisplay(scCalculation) || '';
@@ -1924,33 +2439,33 @@
                 } else {
                     scPreview.innerHTML = '';
                 }
-            } catch(e) {
+            } catch (e) {
                 scPreview.innerHTML = '';
             }
         } else {
             scPreview.innerHTML = '';
         }
         localStorage.setItem('smart_calculation', scCalculation);
-    }
+    };
 
     window.scClearCalculator = function() {
         scCalculation = '';
         scStack = [];
         scSaveAndUpdate();
-    }
+    };
 
     window.scHandleBackspace = function() {
         scCalculation = scCalculation.slice(0, -1);
-        if (scCalculation.charAt(scCalculation.length - 1) === '(' || scCalculation.charAt(scCalculation.length - 1) === ')') {
+        if (scCalculation.endsWith('(') || scCalculation.endsWith(')')) {
             scStack.pop(); 
         }
         scSaveAndUpdate();
-    }
+    };
 
     window.scUpdateCalculation = function(char) {
         scCalculation += char;
         scSaveAndUpdate();
-    }
+    };
 
     window.scHandleParenthesis = function() {
         if (scStack.length % 2 === 0) {
@@ -1961,7 +2476,7 @@
             scStack.push(')');
         }
         scSaveAndUpdate();
-    }
+    };
 
     window.scHandlePlusMinus = function() {
         if (scCalculation === '') return;
@@ -1969,8 +2484,8 @@
             var res = scEvaluateExpression(scCalculation);
             scCalculation = String(res * -1);
             scSaveAndUpdate();
-        } catch(e) { }
-    }
+        } catch (e) { }
+    };
 
     window.scHandleEquals = function() {
         if (scCalculation === '') return;
@@ -1982,7 +2497,7 @@
         } catch (error) {
             scPreview.innerHTML = 'Error';
         }
-    }
+    };
 
     // --- SETUP LISTENERS ---
     window.addEventListener('DOMContentLoaded', function() {
@@ -1996,36 +2511,37 @@
             'defMkVal24', 'defMkVal22', 'defMkVal20', 'defMkVal18', 'defMkValSil'
         ];
         
-        for(var si=0; si<settingsInputs.length; si++) {
-            (function(id) {
-                var el = document.getElementById(id);
-                if (el) {
-                    el.addEventListener('input', function(e) {
-                        if (id === 'silverRateInput') document.getElementById('silverRateSetting').value = e.target.value;
-                        if (id === 'silverRateSetting') document.getElementById('silverRateInput').value = e.target.value;
-                        
-                        saveAllRates(); 
-                        
-                        if (id.indexOf('defMk') === 0) {
-                            updateSaleMetalUI(document.getElementById('metalType').value);
-                        } else {
-                            updateSaleBoxRates(); 
-                            calculateGold();
-                        }
-                        
-                        if(id === 'rate24' || id === 'urdDiff' || id === 'silverRateSetting' || id === 'silverRateInput') {
-                            updateUrdRateSystem();
-                        }
-                    });
-                }
-            })(settingsInputs[si]);
-        }
+        settingsInputs.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', function(e) {
+                    if (id === 'silverRateInput') document.getElementById('silverRateSetting').value = e.target.value;
+                    if (id === 'silverRateSetting') document.getElementById('silverRateInput').value = e.target.value;
 
-        var mkSetBtns = document.querySelectorAll('.set-mk-btn');
-        for(var mk=0; mk<mkSetBtns.length; mk++) {
-            mkSetBtns[mk].addEventListener('click', function() {
-                var siblings = this.parentNode.querySelectorAll('.set-mk-btn');
-                for(var s=0; s<siblings.length; s++) siblings[s].classList.remove('active');
+                    if (id === 'rate24') resetRateOffsets();
+                    if (id === 'pct22') resetRateOffsets('22');
+                    if (id === 'pct20') resetRateOffsets('20');
+                    if (id === 'pct18') resetRateOffsets('18');
+                    
+                    saveAllRates(); 
+                    
+                    if (id.startsWith('defMk')) {
+                        updateSaleMetalUI(document.getElementById('metalType').value);
+                    } else {
+                        updateSaleBoxRates(); 
+                        calculateGold();
+                    }
+                    
+                    if (id === 'rate24' || id === 'urdDiff' || id === 'silverRateSetting' || id === 'silverRateInput') {
+                        updateUrdRateSystem();
+                    }
+                });
+            }
+        });
+
+        document.querySelectorAll('.set-mk-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                this.parentNode.querySelectorAll('.set-mk-btn').forEach(function(b) { b.classList.remove('active'); });
                 this.classList.add('active');
                 
                 var hiddenInputId = this.parentNode.getAttribute('data-target');
@@ -2034,9 +2550,10 @@
                 saveAllRates();
                 updateSaleMetalUI(document.getElementById('metalType').value);
             });
-        }
+        });
 
         document.getElementById('applyGstCb').addEventListener('change', calculateGold);
+        document.getElementById('quickDefMk').addEventListener('click', applyDefaultMk);
 
         document.getElementById('urdRate').addEventListener('input', function() {
             if (document.getElementById('urdMetalType').value === 'gold') {
@@ -2045,51 +2562,48 @@
             calculateURD();
         });
 
-        if(document.getElementById('urdMetalType').value === 'gold') {
+        if (document.getElementById('urdMetalType').value === 'gold') {
             document.getElementById('urdRate').value = localStorage.getItem('lastUrdGoldRate') || calculateDefaultUrdRate();
         } else {
             document.getElementById('urdRate').value = document.getElementById('silverRateSetting').value;
         }
 
-        var makingTypeBtns = document.querySelectorAll('#makingTypeSelector .metal-btn');
-        for(var mt=0; mt<makingTypeBtns.length; mt++) {
-            makingTypeBtns[mt].addEventListener('click', function() {
+        document.querySelectorAll('#makingTypeSelector .metal-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
                 var val = this.getAttribute('data-value');
                 document.getElementById('makingType').value = val;
                 
                 var unitTxt = val === 'percent' ? '(%)' : (val === 'gram' ? '(₹/g)' : '(₹/pc)');
                 document.getElementById('makeLabelText').innerText = 'Temp ' + unitTxt + ':';
                 
-                var parentBtns = this.parentNode.querySelectorAll('.metal-btn');
-                for(var pb=0; pb<parentBtns.length; pb++) parentBtns[pb].classList.remove('active');
+                document.querySelectorAll('#makingTypeSelector .metal-btn').forEach(function(b) { b.classList.remove('active'); });
                 this.classList.add('active');
                 calculateGold();
             });
-        }
+        });
 
         document.getElementById('calcButton').addEventListener('click', calculateGold);
 
-        var urdInputs = ['urdWt', 'urdLessWt', 'urdPct'];
-        for(var ui=0; ui<urdInputs.length; ui++) {
-            document.getElementById(urdInputs[ui]).addEventListener('input', calculateURD);
-        }
+        ['urdWt', 'urdLessWt', 'urdPct'].forEach(function(id) { document.getElementById(id).addEventListener('input', calculateURD); });
         document.getElementById('calcUrdBtn').addEventListener('click', calculateURD);
 
-        var goldInputs = ['goldWeight','makingValue','stoneCharge'];
-        for(var gi=0; gi<goldInputs.length; gi++) {
-            document.getElementById(goldInputs[gi]).addEventListener('input', calculateGold);
-        }
+        ['goldWeight','makingValue','stoneCharge'].forEach(function(id) {
+            document.getElementById(id).addEventListener('input', calculateGold);
+        });
 
         updateSaleBoxRates(); 
         calculateGold(); 
         calculateURD(); 
         updateRateBoard();
 
-        // LONG PRESS RATE BOARD TO GENERATE PDF-MATCHED IMAGE CARD
+        // LONG PRESS METAL RATE BOX => +10 / -10
+        setupRateLongPress();
+
+        // LONG PRESS RATE BOARD TO GENERATE POSTER IMAGE CARD
         var holdTimerRates;
         var rateBoardEl = document.getElementById('rateBoardContent');
 
-        var startHoldRates = function(e) {
+        var startHoldRates = function() {
             holdTimerRates = setTimeout(function() {
                 generateRateCardImage();
             }, 500); 
@@ -2100,17 +2614,17 @@
         };
 
         if (rateBoardEl) {
-            rateBoardEl.addEventListener('touchstart', startHoldRates, {passive: true});
-            rateBoardEl.addEventListener('touchend', cancelHoldRates);
-            rateBoardEl.addEventListener('touchmove', cancelHoldRates);
-            rateBoardEl.addEventListener('mousedown', startHoldRates);
-            rateBoardEl.addEventListener('mouseup', cancelHoldRates);
-            rateBoardEl.addEventListener('mouseleave', cancelHoldRates);
+            rateBoardEl.addEventListener('touchstart', startHoldRates, false);
+            rateBoardEl.addEventListener('touchend', cancelHoldRates, false);
+            rateBoardEl.addEventListener('touchmove', cancelHoldRates, false);
+            rateBoardEl.addEventListener('mousedown', startHoldRates, false);
+            rateBoardEl.addEventListener('mouseup', cancelHoldRates, false);
+            rateBoardEl.addEventListener('mouseleave', cancelHoldRates, false);
         }
 
         // SETUP LONG PRESS EVENTS FOR RENAMING AND GST
-        setupListLongPress('billItemsList', billItems, renderBillPanel);
-        setupListLongPress('urdItemsList', urdBillItems, renderUrdBillPanel);
+        setupListLongPress('billItemsList', function() { return billItems; }, renderBillPanel);
+        setupListLongPress('urdItemsList', function() { return urdBillItems; }, renderUrdBillPanel);
 
         var holdTimerGst;
         var longPressFiredGst = false;
@@ -2136,12 +2650,12 @@
             clearTimeout(holdTimerGst);
         };
 
-        gstLabel.addEventListener('touchstart', startHoldGst, {passive: true});
-        gstLabel.addEventListener('touchend', cancelHoldGst);
-        gstLabel.addEventListener('touchmove', cancelHoldGst);
-        gstLabel.addEventListener('mousedown', startHoldGst);
-        gstLabel.addEventListener('mouseup', cancelHoldGst);
-        gstLabel.addEventListener('mouseleave', cancelHoldGst);
+        gstLabel.addEventListener('touchstart', startHoldGst, false);
+        gstLabel.addEventListener('touchend', cancelHoldGst, false);
+        gstLabel.addEventListener('touchmove', cancelHoldGst, false);
+        gstLabel.addEventListener('mousedown', startHoldGst, false);
+        gstLabel.addEventListener('mouseup', cancelHoldGst, false);
+        gstLabel.addEventListener('mouseleave', cancelHoldGst, false);
 
         gstLabel.addEventListener('click', function(e) {
             if (longPressFiredGst) {
